@@ -3,4 +3,11 @@ project(npp)
 
 set(CMAKE_CXX_STANDARD 20)
 
+add_subdirectory(external/glfw)
+add_subdirectory(external/glad)
+
 add_executable(npp main.cpp)
+
+target_include_directories(npp PRIVATE external/glfw/include external/glad/include)
+
+target_link_libraries(npp glad glfw ${GLFW_LIBRARIES})
