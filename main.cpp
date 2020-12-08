@@ -1,13 +1,25 @@
 #include <iostream>
 
-#include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <glad/glad.h>
 
-#include <imgui.h>
-#include <imgui_impl_glfw.h>
-#include <imgui_impl_opengl3.h>
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
+
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+
+#include "WINTAB.H"
+#define PACKETDATA (PK_X | PK_Y | PK_BUTTONS | PK_NORMAL_PRESSURE)
+#define PACKETMODE PK_BUTTONS
+#include "PKTDEF.H"
 
 void glfw_error(int error, const char *description);
+
+void imgui_init(GLFWwindow *win);
+void imgui_newframe();
+void imgui_render();
 
 int main() {
 	if (!glfwInit()) {
@@ -22,7 +34,7 @@ int main() {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	GLFWwindow *window = glfwCreateWindow(1280, 720, "Test", nullptr, nullptr);
-	if(!window) {
+	if (!window) {
 		std::cerr << "Window could not be initialized!\n";
 		glfwTerminate();
 		return 1;
@@ -30,30 +42,19 @@ int main() {
 	glfwMakeContextCurrent(window);
 	glfwSwapInterval(1);
 
-	if(!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 		std::cerr << "GLAD could not be initialized!\n";
 		glfwTerminate();
 		return 1;
 	}
 
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
+	imgui_init(win);
 
-	ImGuiIO& io = ImGui::GetIO();
-	(void) io;
-	ImGui::StyleColorsDark();
-
-	ImGui_ImplOpenGL3_Init("#version 460 core");
-	ImGui_ImplGlfw_InitForOpenGL(window, true);
-
-	while(!glfwWindowShouldClose(window)) {
+	while (!glfwWindowShouldClose(window)) {
 		glClear(GL_COLOR_BUFFER_BIT);
-		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplGlfw_NewFrame();
-		ImGui::NewFrame();
+		imgui_newframe();
 		ImGui::ShowDemoWindow();
-		ImGui::Render();
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+		imgui_render();
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
@@ -62,6 +63,29 @@ int main() {
 	return 0;
 }
 
-void glfw_error(int error, const char *description){
-	std::cerr << "GLFW Error " << error << ": " <<  description << '\n';
+void imgui_init(GLFWwindow *win) {
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+
+	ImGuiIO &io = ImGui::GetIO();
+	(void)io;
+	ImGui::StyleColorsDark();
+
+	ImGui_ImplOpenGL3_Init("#version 460 core");
+	ImGui_ImplGlfw_InitForOpenGL(win, true);
+}
+
+void imgui_newframe() {
+	ImGui_ImplOpenGL3_NewFrame();
+	ImGui_ImplGlfw_NewFrame();
+	ImGui::NewFrame();
+}
+
+void imgui_render() {
+	ImGui::Render();
+	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
+
+void glfw_error(int error, const char *description) {
+	std::cerr << "GLFW Error " << error << ": " << description << '\n';
 }
