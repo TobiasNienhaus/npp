@@ -22,6 +22,14 @@ void imgui_render();
 
 static WNDPROC g_currentProc;
 
+// SOURCES:
+// https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getpointerpeninfohistory
+// https://docs.microsoft.com/en-us/windows/win32/api/_inputmsg/
+// https://docs.microsoft.com/en-us/windows/win32/debug/system-error-codes--0-499-
+
+// MAYBE CHECK OUT DIRECT2D
+// https://docs.microsoft.com/en-us/windows/win32/direct2d/direct2d-quickstart
+
 const char *get_type_name(POINTER_INPUT_TYPE type) {
 	switch (type) {
 	case PT_POINTER:
