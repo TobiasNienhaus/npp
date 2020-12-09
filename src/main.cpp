@@ -1,7 +1,8 @@
 #include <iostream>
 
-#define GLFW_EXPOSE_NATIVE_WIN32
 #include <glad/glad.h>
+
+#define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
 
@@ -13,99 +14,93 @@
 #include <windows.h>
 #include <winuser.h>
 
-#include "WinTablet.h"
-#include "wacom_def.h"
-
 void glfw_error(int error, const char *description);
 
 void imgui_init(GLFWwindow *win);
 void imgui_newframe();
 void imgui_render();
 
-static WinTablet g_tablet{};
-static WinTablet::Status g_currStatus{};
 static WNDPROC g_currentProc;
+
+const char *get_type_name(POINTER_INPUT_TYPE type) {
+	switch (type) {
+	case PT_POINTER:
+		return "POINTER";
+	case PT_TOUCH:
+		return "TOUCH";
+	case PT_PEN:
+		return "PEN";
+	case PT_MOUSE:
+		return "MOUSE";
+	case PT_TOUCHPAD:
+		return "TOUCHPAD";
+	default:
+		return "SOMETHING";
+	}
+}
+
+bool down = false;
+using pointerid_t = unsigned short;
+pointerid_t pointer;
 
 static LRESULT CALLBACK wndProc(HWND hwnd, UINT umsg, WPARAM wparam,
 								LPARAM lparam) {
-//	std::cout << "CALLBACK MESSAGE\n";
 	switch (umsg) {
-	case WM_CREATE:
-		std::cout << "CREATE\n";
-		g_tablet.init(hwnd);
-		break;
-	case WM_DESTROY:
-		std::cout << "DESTROY\n";
-		g_tablet.cleanup();
-//		PostQuitMessage(0);
-		break;
-	case WM_ACTIVATE:
-		std::cout << "ACTIVATE\n";
-		g_tablet.on_wm_activate(hwnd, wparam, lparam);
-		return 0;
-	case WT_PACKET: {
-		std::cout << "PACKET\n";
-		const WinTablet::Status newStatus =
-			g_tablet.on_wt_packet(hwnd, wparam, lparam);
-		if (memcmp(&newStatus, &g_currStatus, sizeof(newStatus)) != 0) {
-			g_currStatus = newStatus;
-			InvalidateRect(hwnd, nullptr, TRUE);
+	case WM_POINTERENTER: {
+		auto id = GET_POINTERID_WPARAM(wparam);
+		POINTER_INPUT_TYPE type;
+		if (!GetPointerType(id, &type)) {
+			std::cout << "SOMETHING FAILED!" << GetLastError() << '\n';
 		}
-		return 0;
-	}
-	case WM_PAINT: {
-		std::cout << "PAINT\n";
-		PAINTSTRUCT ps;
-		const HDC hdc = BeginPaint(hwnd, &ps);
-		const auto &status = g_currStatus;
-		{
-			POINT pos = {status.x, status.y};
-			ScreenToClient(hwnd, &pos);
-
-			const double x = pos.x;
-			const double y = pos.y;
-			// TODO support different levels of pressure
-			const double pressure =
-				static_cast<double>(status.pressure) / 1023.0;
-			const bool invert = false;
-			// TODO what about multiple buttons?
-			const bool sideButton = status.button;
-
-			// TODO This is some drawing stuff, might not be needed
-			int fnObject = NULL_BRUSH;
-			if (sideButton) { fnObject = GRAY_BRUSH; }
-
-			const double pv = pressure * 128.0;
-			const int cx = static_cast<int>(x);
-			const int cy = static_cast<int>(y);
-			const int left = static_cast<int>(x - pv);
-			const int right = static_cast<int>(x + pv);
-			const int top = static_cast<int>(y - pv);
-			const int bottom = static_cast<int>(y + pv);
-
-			SelectObject(hdc, GetStockObject(fnObject));
-			if (invert) {
-				RoundRect(hdc, left, top, right, bottom, 1, 1);
-			} else {
-				Ellipse(hdc, left, top, right, bottom);
-			}
-			MoveToEx(hdc, cx, 0, nullptr);
-			LineTo(hdc, cx, GetDeviceCaps(hdc, VERTRES));
-			MoveToEx(hdc, 0, cy, nullptr);
-			LineTo(hdc, GetDeviceCaps(hdc, HORZRES), cy);
+		std::cout << get_type_name(type) << " ENTERED!\n";
+	} break;
+	case WM_POINTERLEAVE: {
+		auto id = GET_POINTERID_WPARAM(wparam);
+		POINTER_INPUT_TYPE type;
+		if (!GetPointerType(id, &type)) {
+			std::cout << "SOMETHING FAILED!" << GetLastError() << '\n';
 		}
-		EndPaint(hwnd, &ps);
+		std::cout << get_type_name(type) << " LEFT!\n";
+	} break;
+	case WM_POINTERDOWN: {
+		pointerid_t id = GET_POINTERID_WPARAM(wparam);
+		POINTER_INPUT_TYPE type;
+		if (!GetPointerType(id, &type)) {
+			std::cout << "SOMETHING FAILED!" << GetLastError() << '\n';
+		}
+		if (type == PT_PEN) {
+			down = true;
+			pointer = id;
+			POINTER_PEN_INFO info;
+			GetPointerPenInfo(id, &info);
+			std::cout << "X: " << info.pointerInfo.ptPixelLocation.x
+					  << " | Y: " << info.pointerInfo.ptPixelLocation.y << '\n';
+		}
+	} break;
+	case WM_POINTERUP: {
+		pointerid_t id = GET_POINTERID_WPARAM(wparam);
+		POINTER_INPUT_TYPE type;
+		if (!GetPointerType(id, &type)) {
+			std::cout << "SOMETHING FAILED!" << GetLastError() << '\n';
+		}
+		if (type == PT_PEN) {
+			down = false;
+			pointer = id;
+			POINTER_PEN_INFO info;
+			GetPointerPenInfo(id, &info);
+			std::cout << "X: " << info.pointerInfo.ptPixelLocation.x
+					  << " | Y: " << info.pointerInfo.ptPixelLocation.y << '\n';
+		}
 	} break;
 	default:
 		return CallWindowProc(g_currentProc, hwnd, umsg, wparam, lparam);
 	}
 	return 0;
-//	return DefWindowProc(hwnd, umsg, wparam, lparam);
 }
 
-int main() {
-	if (!g_tablet.app_init()) { return 1; }
+void try_print_info();
 
+int main() {
 	if (!glfwInit()) {
 		std::cerr << "Init crashed!\n";
 		glfwTerminate();
@@ -124,7 +119,7 @@ int main() {
 		return 1;
 	}
 	glfwMakeContextCurrent(window);
-	glfwSwapInterval(1);
+	glfwSwapInterval(0);
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 		std::cerr << "GLAD could not be initialized!\n";
@@ -134,8 +129,10 @@ int main() {
 
 	// TODO scope maybe not the best idea
 	{
-		g_currentProc = (WNDPROC)GetWindowLongPtr(glfwGetWin32Window(window), GWL_WNDPROC);
-		SetWindowLongPtr(glfwGetWin32Window(window), GWL_WNDPROC, (long)wndProc);
+		g_currentProc =
+			(WNDPROC)GetWindowLongPtr(glfwGetWin32Window(window), GWL_WNDPROC);
+		SetWindowLongPtr(glfwGetWin32Window(window), GWL_WNDPROC,
+						 (long)wndProc);
 	}
 
 	imgui_init(window);
@@ -147,6 +144,7 @@ int main() {
 			open = false;
 			continue;
 		}
+		// Are messages coming fast enough? Maybe put on another thread
 		if (!GetMessage(&msg, nullptr, 0, 0)) {
 			open = false;
 			continue;
@@ -154,17 +152,48 @@ int main() {
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
-
+		//	while(!glfwWindowShouldClose(window)) {
 		glClear(GL_COLOR_BUFFER_BIT);
 		imgui_newframe();
 		imgui_render();
+
+		try_print_info();
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
 
-	g_tablet.app_cleanup();
-	return static_cast<int>(msg.wParam);
+	return 0;
+}
+
+void try_print_info() {
+	if(down) {
+		POINTER_INPUT_TYPE type;
+		if (!GetPointerType(pointer, &type)) {
+			std::cout << "SOMETHING FAILED 1!" << GetLastError() << '\n';
+			return;
+		}
+		if (type == PT_PEN) {
+			POINTER_PEN_INFO info[512];
+			UINT32 count = 512;
+			std::cout << "POINTER " << pointer << '\n';
+			if(!GetPointerPenInfoHistory(pointer, &count, info)) {
+				std::cout << "SOMETHING FAILED 2!" << GetLastError() << '\n';
+				std::cout << "TYPE MISMATCH IS CODE " << ERROR_DATATYPE_MISMATCH << '\n';
+			} else {
+				std::cout << "COUNT: " << count << '\n';
+				for (int i = 0; i < count; ++i) {
+					std::cout
+						<< "POS [" << i << "] "
+						<< "X: " << info[i].pointerInfo.ptPixelLocation.x
+						<< " | Y: " << info[i].pointerInfo.ptPixelLocation.y
+						<< " | PRESS: " << info[i].pressure
+						<< '\n';
+				}
+			}
+
+		}
+	}
 }
 
 void imgui_init(GLFWwindow *win) {

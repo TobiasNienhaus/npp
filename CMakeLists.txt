@@ -10,7 +10,7 @@ add_subdirectory(external/wintab)
 
 add_executable(npp
 			   src/main.cpp
-			   src/WinTablet.cpp src/WinTablet.h src/wacom_def.h)
+			   )
 
 target_include_directories(npp PRIVATE
 						   external/glfw/include
