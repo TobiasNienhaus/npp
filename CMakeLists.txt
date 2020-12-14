@@ -9,7 +9,7 @@ add_subdirectory(external/imgui)
 
 add_executable(npp
 			   src/main.cpp
-			   )
+			   src/tab/tablet_handling.cpp src/tab/tablet_handling.hpp src/tab/Tablet.cpp src/tab/Tablet.hpp src/tab/tablet_util.cpp src/tab/tablet_util.hpp)
 
 target_include_directories(npp PRIVATE
 						   external/glfw/include
