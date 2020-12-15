@@ -15,12 +15,15 @@
 #include <winuser.h>
 
 #include "tab/tablet_handling.hpp"
+#include "tab/tablet_props.hpp"
 
 void glfw_error(int error, const char *description);
 
 void imgui_init(GLFWwindow *win);
 void imgui_newframe();
 void imgui_render();
+
+void test_something();
 
 static WNDPROC g_currentProc;
 
@@ -44,6 +47,8 @@ int main() {
 		glfwTerminate();
 		return 1;
 	}
+
+	test_something();
 
 	glfwSetErrorCallback(glfw_error);
 
@@ -97,6 +102,7 @@ int main() {
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
+		npp::tablet().update();
 	}
 
 	return 0;
@@ -128,4 +134,44 @@ void imgui_render() {
 
 void glfw_error(int error, const char *description) {
 	std::cerr << "GLFW Error " << error << ": " << description << '\n';
+}
+
+void print_props(HANDLE handle) {
+	constexpr UINT32 maxProperties = 32;
+	UINT32 propertyCount = maxProperties;
+	POINTER_DEVICE_PROPERTY properties[maxProperties];
+	if (!GetPointerDeviceProperties(handle, &propertyCount, properties)) {
+		std::cerr << "SOMETHING FAILED! (print_props)" << GetLastError() << '\n';
+		return;
+	}
+	for (int i = 0; i < propertyCount; ++i) {
+		auto &prop = properties[i];
+		std::cout << "logical min: " << prop.logicalMin << '\n'
+		<< "logical max: " << prop.logicalMax << '\n'
+		<< "physical min: " << prop.physicalMin << '\n'
+		<< "physical max: " << prop.physicalMax << '\n'
+		<< "unit: " << prop.unit << '\n'
+		<< "unit exponent: " << prop.unitExponent << '\n'
+		<< "usage page id: " << prop.usagePageId << '\n'
+		<< "usage id: " << prop.usageId << '\n'
+		<< "usage name: " << npp::props::usage_as_string(prop.usagePageId, prop.usageId) << '\n';
+	}
+}
+
+void test_something() {
+	constexpr UINT32 maxDevices = 32;
+	UINT32 deviceCount = maxDevices;
+	POINTER_DEVICE_INFO devices[maxDevices];
+	if (!GetPointerDevices(&deviceCount, devices)) {
+		std::cerr << "SOMETHING FAILED! (test_something)" << GetLastError() << '\n';
+		return;
+	}
+	for (int i = 0; i < deviceCount; ++i) {
+		char str[520];
+		size_t num;
+		auto err = wcstombs_s(&num, str, 520, devices[i].productString, 519);
+		if (!err) { std::cout << str << '\n'; }
+		else std::cerr << "String convert error!\n";
+		print_props(devices[i].device);
+	}
 }

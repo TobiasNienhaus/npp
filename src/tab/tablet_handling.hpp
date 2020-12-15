@@ -8,10 +8,11 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
+#include "Tablet.hpp"
+
 namespace npp {
 
-void init();
-void cleanup();
+Tablet &tablet();
 
 LRESULT catch_tablet_msgs(WNDPROC next, HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam);
 

@@ -8,7 +8,11 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
+// FIXME somehow don't rely on this include
+#include "Tablet.hpp"
+
 namespace npp::util {
+
 enum class PointerType {
 	POINTER,
 	TOUCH,
@@ -56,6 +60,8 @@ constexpr const char *ptype_name(PointerType type) {
 constexpr const char *ptype_name(POINTER_INPUT_TYPE type) {
 	return ptype_name(win32_ptype_to_lib(type));
 }
+
+PointerType id_to_type(Tablet::pointerid_t id);
 
 }
 

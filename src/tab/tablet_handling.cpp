@@ -6,58 +6,26 @@
 
 #include <iostream>
 
-#include "tablet_util.hpp"
 #include "Tablet.hpp"
+#include "tablet_util.hpp"
 
 namespace npp {
 
-static void on_pointer_down();
-static void on_pointer_up();
-
 LRESULT catch_tablet_msgs(WNDPROC next, HWND hwnd, UINT umsg, WPARAM wparam,
 						  LPARAM lparam) {
+	auto id = GET_POINTERID_WPARAM(wparam);
 	switch (umsg) {
 	case WM_POINTERENTER: {
-		auto id = GET_POINTERID_WPARAM(wparam);
-		POINTER_INPUT_TYPE type;
-		if (!GetPointerType(id, &type)) {
-			std::cout << "SOMETHING FAILED!" << GetLastError() << '\n';
-		}
-		std::cout << util::ptype_name(type) << " ENTERED!\n";
+		tablet().pen_enter(id);
 	} break;
 	case WM_POINTERLEAVE: {
-		auto id = GET_POINTERID_WPARAM(wparam);
-		POINTER_INPUT_TYPE type;
-		if (!GetPointerType(id, &type)) {
-			std::cout << "SOMETHING FAILED!" << GetLastError() << '\n';
-		}
-		std::cout << util::ptype_name(type) << " LEFT!\n";
+		tablet().pen_exit(id);
 	} break;
 	case WM_POINTERDOWN: {
-		Tablet::pointerid_t id = GET_POINTERID_WPARAM(wparam);
-		POINTER_INPUT_TYPE type;
-		if (!GetPointerType(id, &type)) {
-			std::cout << "SOMETHING FAILED!" << GetLastError() << '\n';
-		}
-		if (type == PT_PEN) {
-			POINTER_PEN_INFO info;
-			GetPointerPenInfo(id, &info);
-			std::cout << "X: " << info.pointerInfo.ptPixelLocation.x
-					  << " | Y: " << info.pointerInfo.ptPixelLocation.y << '\n';
-		}
+		tablet().pen_down(id);
 	} break;
 	case WM_POINTERUP: {
-		Tablet::pointerid_t id = GET_POINTERID_WPARAM(wparam);
-		POINTER_INPUT_TYPE type;
-		if (!GetPointerType(id, &type)) {
-			std::cout << "SOMETHING FAILED!" << GetLastError() << '\n';
-		}
-		if (type == PT_PEN) {
-			POINTER_PEN_INFO info;
-			GetPointerPenInfo(id, &info);
-			std::cout << "X: " << info.pointerInfo.ptPixelLocation.x
-					  << " | Y: " << info.pointerInfo.ptPixelLocation.y << '\n';
-		}
+		tablet().pen_up(id);
 	} break;
 	default:
 		return CallWindowProc(next, hwnd, umsg, wparam, lparam);
@@ -65,4 +33,10 @@ LRESULT catch_tablet_msgs(WNDPROC next, HWND hwnd, UINT umsg, WPARAM wparam,
 	return 0;
 }
 
-} // namespace npp::tablet
+Tablet &tablet() {
+	// Leaking... on purpose
+	static auto *instance = new Tablet();
+	return *instance;
+}
+
+} // namespace npp
