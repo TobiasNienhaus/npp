@@ -18,13 +18,13 @@ public:
 
 	using pointerid_t = unsigned short;
 
-	static constexpr UINT32 s_maxProperties = 32;
+	static constexpr UINT32 s_maxProperties = 128;
 
 	struct PointData {
 		bool valid{false};
-		double x{};
-		double y{};
-		double pressure{};
+		float x{};
+		float y{};
+		float pressure{};
 	};
 
 	struct Property {
@@ -36,7 +36,7 @@ public:
 		INT32 min;
 		INT32 max;
 
-		[[nodiscard]] double normalize(INT32 val, bool shouldClamp = false) const;
+		[[nodiscard]] float normalize(INT32 val, bool shouldClamp = false) const;
 	};
 
 	void pen_enter(pointerid_t id);
@@ -79,7 +79,7 @@ private:
 	void read_properties();
 	void clear_props();
 	void set_properties_to_default();
-	HANDLE m_sourceDevice;
+
 	Property m_pressure;
 	Property m_tiltX;
 	Property m_tiltY;
