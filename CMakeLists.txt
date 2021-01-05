@@ -7,17 +7,13 @@ add_subdirectory(external/glfw)
 add_subdirectory(external/glad)
 add_subdirectory(external/imgui)
 
-add_executable(npp
+add_executable(npp WIN32
 			   src/main.cpp
 			   src/tab/tablet_handling.cpp
-			   src/tab/tablet_handling.hpp
 			   src/tab/Tablet.cpp
-			   src/tab/Tablet.hpp
 			   src/tab/tablet_util.cpp
-			   src/tab/tablet_util.hpp
 			   src/tab/tablet_props.cpp
-			   src/tab/tablet_props.hpp
-			   )
+			   src/graphics/TestWindow.cpp src/graphics/TestWindow.hpp src/graphics/D2DWindow.cpp src/graphics/D2DWindow.hpp)
 
 target_include_directories(npp PRIVATE
 						   external/glfw/include
