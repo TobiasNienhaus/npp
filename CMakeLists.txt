@@ -16,6 +16,7 @@ add_executable(npp WIN32
 			   src/graphics/TestWindow.cpp
 			   src/graphics/D2DWindow.cpp
 			   src/graphics/direct2d_helpers.cpp
+			   src/util/random.cpp
 			   )
 
 target_include_directories(npp PRIVATE
