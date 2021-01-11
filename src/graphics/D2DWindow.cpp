@@ -49,20 +49,7 @@ LPCWSTR D2DWindow::class_name() const {
 	return L"npp Direct2D context";
 }
 
-D2DWindow::D2DWindow() :
-	m_factory{nullptr},
-	m_renderTarget{nullptr},
-	m_brush{nullptr},
-	m_ellipse{} {}
-
-void D2DWindow::calculate_layout() {
-	if (m_renderTarget != nullptr) {
-		D2D1_SIZE_F size = m_renderTarget->GetSize();
-		const float x = size.width / 2;
-		const float y = size.height / 2;
-		m_ellipse = D2D1::Ellipse(D2D1::Point2F(x, y), x, y);
-	}
-}
+D2DWindow::D2DWindow() : m_factory{nullptr}, m_renderTarget{nullptr} {}
 
 HRESULT D2DWindow::create_graphics_resources() {
 	HRESULT hr = S_OK;
@@ -78,12 +65,7 @@ HRESULT D2DWindow::create_graphics_resources() {
 			D2D1::HwndRenderTargetProperties(get_window(), size),
 			&m_renderTarget);
 
-		if (SUCCEEDED(hr)) {
-			const D2D1_COLOR_F color = D2D1::ColorF(1.f, 1.f, 0.f);
-			hr = m_renderTarget->CreateSolidColorBrush(color, &m_brush);
-
-			if (SUCCEEDED(hr)) { calculate_layout(); }
-		}
+		if (SUCCEEDED(hr)) {}
 	}
 
 	return hr;
@@ -91,8 +73,6 @@ HRESULT D2DWindow::create_graphics_resources() {
 
 void D2DWindow::discard_graphics_resources() {
 	safe_release(&m_renderTarget);
-	safe_release(&m_brush);
-	safe_release(&m_factory);
 }
 
 void D2DWindow::on_paint() {
@@ -102,9 +82,6 @@ void D2DWindow::on_paint() {
 		BeginPaint(get_window(), &ps);
 
 		m_renderTarget->BeginDraw();
-
-		m_renderTarget->Clear(D2D1::ColorF(D2D1::ColorF::SkyBlue));
-		m_renderTarget->FillEllipse(m_ellipse, m_brush);
 
 		hr = m_renderTarget->EndDraw();
 		if (FAILED(hr) || hr == D2DERR_RECREATE_TARGET) {
@@ -122,7 +99,6 @@ void D2DWindow::resize() {
 		D2D1_SIZE_U size = D2D1::SizeU(rc.right, rc.bottom);
 
 		m_renderTarget->Resize(size);
-		calculate_layout();
 		InvalidateRect(get_window(), nullptr, FALSE);
 	}
 }

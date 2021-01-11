@@ -14,10 +14,7 @@ class D2DWindow : public Win32Context<D2DWindow> {
 private:
 	ID2D1Factory *m_factory;
 	ID2D1HwndRenderTarget *m_renderTarget;
-	ID2D1SolidColorBrush *m_brush;
-	D2D1_ELLIPSE m_ellipse;
 
-	void calculate_layout();
 	HRESULT create_graphics_resources();
 	void discard_graphics_resources();
 	void on_paint();
