@@ -21,36 +21,6 @@ void weird_console_hack() {
 	freopen_s(&fp, "CONOUT$", "w", stdout);
 }
 
-LRESULT CALLBACK window_proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-	switch(msg) {
-	case WM_SIZE: {
-		int w = LOWORD(lp);
-		int h = HIWORD(lp);
-	}
-		return 0;
-	case WM_PAINT: {
-		PAINTSTRUCT ps;
-		HDC hdc{BeginPaint(hwnd, &ps)};
-		FillRect(hdc, &ps.rcPaint, (HBRUSH)(COLOR_WINDOW + 1));
-		EndPaint(hwnd, &ps);
-	}
-		return 0;
-	case WM_CLOSE: {
-		if (MessageBox(hwnd, L"Really quit?", L"My application", MB_OKCANCEL) == IDOK)
-		{
-			DestroyWindow(hwnd);
-		}
-		// Else: User canceled. Do nothing.
-		return 0;
-	}
-	case WM_DESTROY:
-		PostQuitMessage(0);
-		return 0;
-	}
-
-	return DefWindowProc(hwnd, msg, wp, lp);
-}
-
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 				   LPWSTR lpCmdLine, int nCmdShow) {
 //	weird_console_hack();
