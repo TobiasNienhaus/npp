@@ -4,13 +4,7 @@
 
 #include "D2DWindow.hpp"
 
-
-template <typename T> void safe_release(T **comObj) {
-	if (*comObj) {
-		(*comObj)->Release();
-		*comObj = nullptr;
-	}
-}
+#include "direct2d_helpers.hpp"
 
 LRESULT D2DWindow::handle_message(UINT msg, WPARAM wp, LPARAM lp) {
 	switch (msg) {
@@ -57,7 +51,7 @@ HRESULT D2DWindow::create_graphics_resources() {
 }
 
 void D2DWindow::discard_graphics_resources() {
-	safe_release(&m_renderTarget);
+	npp::graphics::com_safe_release(&m_renderTarget);
 }
 
 void D2DWindow::on_paint() {

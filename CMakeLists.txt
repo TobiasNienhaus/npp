@@ -13,7 +13,10 @@ add_executable(npp WIN32
 			   src/tab/Tablet.cpp
 			   src/tab/tablet_util.cpp
 			   src/tab/tablet_props.cpp
-			   src/graphics/TestWindow.cpp src/graphics/TestWindow.hpp src/graphics/D2DWindow.cpp src/graphics/D2DWindow.hpp)
+			   src/graphics/TestWindow.cpp
+			   src/graphics/D2DWindow.cpp
+			   src/graphics/direct2d_helpers.cpp
+			   )
 
 target_include_directories(npp PRIVATE
 						   external/glfw/include
