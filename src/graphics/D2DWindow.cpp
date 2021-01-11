@@ -76,6 +76,8 @@ void D2DWindow::on_paint() {
 
 		m_renderTarget->BeginDraw();
 
+		draw();
+
 		hr = m_renderTarget->EndDraw();
 		if (FAILED(hr) || hr == D2DERR_RECREATE_TARGET) {
 			discard_device_dependent_resources();
@@ -121,6 +123,8 @@ LRESULT D2DWindow::on_close() {
 	// Else: User canceled. Do nothing.
 	return 0;
 }
+
+void D2DWindow::draw() {}
 
 ID2D1HwndRenderTarget *D2DWindow::get_render_target() {
 	return m_renderTarget;

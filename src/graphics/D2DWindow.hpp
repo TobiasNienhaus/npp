@@ -18,7 +18,6 @@ private:
 	IDWriteFactory *m_writeFactory;
 	ID2D1HwndRenderTarget *m_renderTarget;
 
-	void on_paint();
 	void resize();
 
 protected:
@@ -26,6 +25,9 @@ protected:
 	LRESULT on_destroy();
 	LRESULT on_resize();
 	LRESULT on_close();
+	void on_paint();
+
+	virtual void draw();
 
 	ID2D1Factory *get_factory();
 	IDWriteFactory *get_write_factory();
