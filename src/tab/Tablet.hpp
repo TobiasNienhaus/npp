@@ -6,7 +6,7 @@
 #define NPP_TABLET_HPP
 
 #define WIN32_LEAN_AND_MEAN
-#include <windows.h>
+#include <Windows.h>
 
 #include <queue>
 
@@ -14,7 +14,17 @@ namespace npp {
 
 class Tablet {
 public:
-	Tablet();
+	enum class Event {
+		LEAVE,
+		ENTER,
+		DOWN,
+		UP,
+		UPDATE,
+		UNHANDLED
+	};
+
+public:
+	explicit Tablet(HWND hwnd = nullptr);
 
 	using pointerid_t = unsigned short;
 
@@ -38,6 +48,10 @@ public:
 
 		[[nodiscard]] float normalize(INT32 val, bool shouldClamp = false) const;
 	};
+
+	Event handle_event(UINT msg, WPARAM wp);
+
+	void set_hwnd(HWND hwnd);
 
 	void pen_enter(pointerid_t id);
 	void pen_exit(pointerid_t id);
@@ -63,6 +77,8 @@ private:
 	pointerid_t m_pointer;
 	// maybe use vector, if it has push (back) and pop (front)
 	std::queue<PointData> m_points;
+
+	HWND m_windowHandle;
 
 	static constexpr Property s_pressureDefault = {
 		true, 0x0, 0x0, 0, 4096

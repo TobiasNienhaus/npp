@@ -11,11 +11,12 @@
 
 namespace npp {
 
-Tablet::Tablet() :
+Tablet::Tablet(HWND hwnd) :
 	m_valid{false},
 	m_down{false},
 	m_pointer{0},
 	m_points{},
+	m_windowHandle{hwnd},
 	m_pressure{s_pressureDefault},
 	m_tiltX{s_tiltXDefault},
 	m_tiltY{s_tiltYDefault} {}
@@ -116,27 +117,33 @@ void Tablet::pen_exit(Tablet::pointerid_t id) {
 }
 
 void Tablet::update() {
-	if (!m_valid) {
+	if (!m_valid || !m_down) {
 		return;
 	} else {
+		// FIXME same event may be used twice
 		if (util::id_to_type(m_pointer) == util::PointerType::PEN) {
 			POINTER_PEN_INFO info[16];
 			UINT32 count = 16;
-//			if (!GetPointerPenInfoHistory(m_pointer, &count, info)) {
 			if (!GetPointerPenInfoHistory(m_pointer, &count, info)) {
 				std::cout << "Could not get pointer history!" << GetLastError()
 						  << '\n';
 			} else {
-				// TODO write into m_points
-				std::cout << "COUNT: " << count * count << '\n';
-				for (int i = 0; i < count; ++i) {
-					// TODO fit to monitor
-					m_points.push({true,
-								   static_cast<float>(
-									   info[i].pointerInfo.ptPixelLocation.x),
-								   static_cast<float>(
-									   info[i].pointerInfo.ptPixelLocation.y),
-								   m_pressure.normalize(info[i].pressure)});
+				for (unsigned int i = count; i-- > 0;) {
+					auto p{info[i].pointerInfo.ptPixelLocationRaw};
+					if (ScreenToClient(info[i].pointerInfo.hwndTarget, &p)) {
+						PointData pd{true, static_cast<float>(p.x),
+									 static_cast<float>(p.y),
+									 m_pressure.normalize(info[i].pressure)};
+						m_points.push(pd);
+					} else {
+						std::cout
+							<< "Point could not be converted to client space\n";
+					}
+				}
+				// FIXME probably also a hack
+				if (m_windowHandle) {
+					RedrawWindow(m_windowHandle, nullptr, nullptr,
+								 RDW_INTERNALPAINT);
 				}
 			}
 		}
@@ -163,20 +170,52 @@ Tablet::PointData Tablet::get_next() {
 
 std::vector<Tablet::PointData> Tablet::get_all() {
 	auto p = get_next();
-	if(!p.valid) {
-		return {};
-	}
+	if (!p.valid) { return {}; }
 	std::vector<PointData> ret;
-	while(p.valid) {
+	while (p.valid) {
 		ret.push_back(p);
 		p = get_next();
 	}
 	return ret;
 }
 
+Tablet::Event Tablet::handle_event(UINT msg, WPARAM wp) {
+	auto id = GET_POINTERID_WPARAM(wp);
+	switch (msg) {
+	case WM_POINTERENTER: {
+		pen_enter(id);
+	}
+		return Event::ENTER;
+	case WM_POINTERLEAVE: {
+		pen_exit(id);
+	}
+		return Event::LEAVE;
+	case WM_POINTERDOWN: {
+		pen_down(id);
+	}
+		return Event::DOWN;
+	case WM_POINTERUP: {
+		pen_up(id);
+	}
+		return Event::UP;
+	case WM_POINTERUPDATE:
+		if(id == m_pointer) {
+			update();
+		}
+		return Event::UPDATE;
+	default:
+		return Event::UNHANDLED;
+	}
+}
+
+void Tablet::set_hwnd(HWND hwnd) {
+	m_windowHandle = hwnd;
+}
+
 float Tablet::Property::normalize(INT32 val, bool shouldClamp) const {
-	auto ret = static_cast<float>((static_cast<double>(val) - min) / (max - min));
-	if(ret == std::numeric_limits<decltype(ret)>::infinity()) {
+	auto ret =
+		static_cast<float>((static_cast<double>(val) - min) / (max - min));
+	if (ret == std::numeric_limits<decltype(ret)>::infinity()) {
 		std::cerr << "wut??? " << min << ", " << max << '\n';
 	}
 	if (shouldClamp) {
