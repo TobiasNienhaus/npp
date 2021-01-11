@@ -20,6 +20,12 @@ private:
 	void on_paint();
 	void resize();
 
+protected:
+	LRESULT on_create();
+	LRESULT on_destroy();
+	LRESULT on_resize();
+	LRESULT on_close();
+
 public:
 	D2DWindow();
 
