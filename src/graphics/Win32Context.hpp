@@ -34,7 +34,9 @@ public:
 		m_window = CreateWindowEx(dwExStyle, class_name(), lpWindowName,
 								  dwStyle, x, y, nWidth, nHeight, hWndParent,
 								  hMenu, GetModuleHandle(nullptr), this);
-
+		if(valid()) {
+			on_valid_context_creation();
+		}
 		return valid();
 	}
 
@@ -70,6 +72,9 @@ private:
 public:
 	virtual LRESULT handle_message(UINT msg, WPARAM wp, LPARAM lp) = 0;
 	[[nodiscard]] virtual LPCWSTR class_name() const = 0;
+
+protected:
+	virtual void on_valid_context_creation() {}
 
 private:
 	HWND m_window;
