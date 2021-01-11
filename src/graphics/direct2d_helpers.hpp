@@ -10,6 +10,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #include <d2d1.h>
+#include <dwrite.h>
 #pragma comment(lib, "d2d1")
 
 namespace npp::graphics {

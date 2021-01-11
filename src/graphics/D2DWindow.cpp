@@ -54,6 +54,20 @@ void D2DWindow::discard_device_dependent_resources() {
 	npp::graphics::com_safe_release(&m_renderTarget);
 }
 
+HRESULT D2DWindow::create_device_independent_resources() {
+	auto hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &m_factory);
+	if (FAILED(hr)) { return hr; }
+	hr = DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED,
+							 __uuidof(m_writeFactory),
+							 reinterpret_cast<IUnknown **>(&m_writeFactory));
+	return hr;
+}
+
+void D2DWindow::discard_device_independent_resources() {
+	npp::graphics::com_safe_release(&m_factory);
+	npp::graphics::com_safe_release(&m_writeFactory);
+}
+
 void D2DWindow::on_paint() {
 	HRESULT hr = create_device_dependent_resources();
 	if (SUCCEEDED(hr)) {
@@ -83,16 +97,13 @@ void D2DWindow::resize() {
 }
 
 LRESULT D2DWindow::on_create() {
-	if (FAILED(
-			D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &m_factory))) {
-		return -1;
-	}
-	return 0;
+	if (SUCCEEDED(create_device_independent_resources())) { return 0; }
+	return 1;
 }
 
 LRESULT D2DWindow::on_destroy() {
 	discard_device_dependent_resources();
-	npp::graphics::com_safe_release(&m_factory);
+	discard_device_independent_resources();
 	PostQuitMessage(0);
 	return 0;
 }
