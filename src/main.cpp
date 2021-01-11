@@ -7,7 +7,7 @@
 #include <Windows.h>
 #include <winuser.h>
 
-#include "graphics/D2DWindow.hpp"
+#include "graphics/TabletWin.hpp"
 
 #include "tab/tablet_handling.hpp"
 #include "tab/tablet_props.hpp"
@@ -23,8 +23,8 @@ void weird_console_hack() {
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 				   LPWSTR lpCmdLine, int nCmdShow) {
-//	weird_console_hack();
-	D2DWindow window;
+	weird_console_hack();
+	TabletWin window;
 
 	if(!window.create(L"NPP", WS_OVERLAPPEDWINDOW)) {
 		return 1;
