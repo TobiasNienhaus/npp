@@ -15,8 +15,8 @@ private:
 	ID2D1Factory *m_factory;
 	ID2D1HwndRenderTarget *m_renderTarget;
 
-	HRESULT create_graphics_resources();
-	void discard_graphics_resources();
+	HRESULT create_device_dependent_resources();
+	void discard_device_dependent_resources();
 	void on_paint();
 	void resize();
 

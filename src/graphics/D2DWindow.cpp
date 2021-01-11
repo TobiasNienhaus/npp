@@ -30,7 +30,7 @@ LPCWSTR D2DWindow::class_name() const {
 
 D2DWindow::D2DWindow() : m_factory{nullptr}, m_renderTarget{nullptr} {}
 
-HRESULT D2DWindow::create_graphics_resources() {
+HRESULT D2DWindow::create_device_dependent_resources() {
 	HRESULT hr = S_OK;
 
 	if (!m_renderTarget) {
@@ -50,12 +50,12 @@ HRESULT D2DWindow::create_graphics_resources() {
 	return hr;
 }
 
-void D2DWindow::discard_graphics_resources() {
+void D2DWindow::discard_device_dependent_resources() {
 	npp::graphics::com_safe_release(&m_renderTarget);
 }
 
 void D2DWindow::on_paint() {
-	HRESULT hr = create_graphics_resources();
+	HRESULT hr = create_device_dependent_resources();
 	if (SUCCEEDED(hr)) {
 		PAINTSTRUCT ps;
 		BeginPaint(get_window(), &ps);
@@ -64,7 +64,7 @@ void D2DWindow::on_paint() {
 
 		hr = m_renderTarget->EndDraw();
 		if (FAILED(hr) || hr == D2DERR_RECREATE_TARGET) {
-			discard_graphics_resources();
+			discard_device_dependent_resources();
 		}
 		EndPaint(get_window(), &ps);
 	}
