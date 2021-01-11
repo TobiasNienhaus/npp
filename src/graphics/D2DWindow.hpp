@@ -26,6 +26,11 @@ protected:
 	LRESULT on_destroy();
 	LRESULT on_resize();
 	LRESULT on_close();
+
+	ID2D1Factory *get_factory();
+	IDWriteFactory *get_write_factory();
+	ID2D1HwndRenderTarget *get_render_target();
+
 	virtual HRESULT create_device_independent_resources();
 	virtual void discard_device_independent_resources();
 	virtual HRESULT create_device_dependent_resources();

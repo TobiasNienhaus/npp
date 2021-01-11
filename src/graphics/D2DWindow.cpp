@@ -121,3 +121,15 @@ LRESULT D2DWindow::on_close() {
 	// Else: User canceled. Do nothing.
 	return 0;
 }
+
+ID2D1HwndRenderTarget *D2DWindow::get_render_target() {
+	return m_renderTarget;
+}
+
+ID2D1Factory *D2DWindow::get_factory() {
+	return m_factory;
+}
+
+IDWriteFactory *D2DWindow::get_write_factory() {
+	return m_writeFactory;
+}
