@@ -9,7 +9,6 @@
 
 #include "graphics/TabletWin.hpp"
 
-#include "tab/tablet_handling.hpp"
 #include "tab/tablet_props.hpp"
 
 void print_all_device_properties();
