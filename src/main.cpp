@@ -3,11 +3,10 @@
 
 #include <iostream>
 
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
+#include "util/win_headers.hpp"
 #include <winuser.h>
 
-#include "graphics/TabletWin.hpp"
+#include "graphics/D3D10Window.hpp"
 
 #include "tab/tablet_props.hpp"
 
@@ -22,21 +21,29 @@ void weird_console_hack() {
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 				   LPWSTR lpCmdLine, int nCmdShow) {
+	auto hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+	if(FAILED(hr)) {
+		PostQuitMessage(-1);
+		return -1;
+	}
+
 	weird_console_hack();
-	TabletWin window;
+	D3D10Window window;
 
 	if(!window.create(L"NPP", WS_OVERLAPPEDWINDOW)) {
 		return 1;
 	}
 
+	std::cout << "Test\n";
 	window.show(nCmdShow);
+	std::cout << "Test2\n";
 
 	MSG msg{};
 	while(GetMessage(&msg, nullptr, 0, 0)) {
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}
-
+	CoUninitialize();
 	return 0;
 }
 

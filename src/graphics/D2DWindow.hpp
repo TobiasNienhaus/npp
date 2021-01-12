@@ -7,15 +7,12 @@
 
 #include "Win32Context.hpp"
 
-#include <d2d1.h>
-#pragma comment(lib, "d2d1")
-#include <dwrite.h>
-#pragma comment(lib, "dwrite")
+#include "../util/d2d_headers.hpp"
 
 class D2DWindow : public Win32Context<D2DWindow> {
 private:
 	ID2D1Factory *m_factory;
-	IDWriteFactory *m_writeFactory;
+	IDWriteFactory *m_writeFactory{};
 	ID2D1HwndRenderTarget *m_renderTarget;
 
 	void resize();

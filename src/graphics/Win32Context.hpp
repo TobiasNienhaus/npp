@@ -5,37 +5,38 @@
 #ifndef NPP_WIN32CONTEXT_HPP
 #define NPP_WIN32CONTEXT_HPP
 
-#define UNICODE
-#define _UNICODE
-#define NOMINMAX
-
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
+#include "../util/win_headers.hpp"
 
 #include <concepts>
 
 template<typename derived_t>
 class Win32Context {
 public:
-	Win32Context() : m_window{nullptr} {}
+	Win32Context() : m_window{nullptr}, m_wndClass{0} {}
+	virtual ~Win32Context() {
+		DestroyWindow(m_window);
+		UnregisterClass(m_wndClass.lpszClassName, m_wndClass.hInstance);
+	}
 
 	BOOL create(PCWSTR lpWindowName, DWORD dwStyle, DWORD dwExStyle = 0,
 				int x = CW_USEDEFAULT, int y = CW_USEDEFAULT,
 				int nWidth = CW_USEDEFAULT, int nHeight = CW_USEDEFAULT,
 				HWND hWndParent = nullptr, HMENU hMenu = nullptr) {
-		WNDCLASS wc = {0};
+		m_wndClass = {0};
 
-		wc.lpfnWndProc = derived_t::s_win_proc;
-		wc.hInstance = GetModuleHandle(nullptr);
-		wc.lpszClassName = class_name();
+		m_wndClass.lpfnWndProc = derived_t::s_win_proc;
+		m_wndClass.hInstance = GetModuleHandle(nullptr);
+		m_wndClass.lpszClassName = class_name();
 
-		RegisterClass(&wc);
+		RegisterClass(&m_wndClass);
 
 		m_window = CreateWindowEx(dwExStyle, class_name(), lpWindowName,
 								  dwStyle, x, y, nWidth, nHeight, hWndParent,
 								  hMenu, GetModuleHandle(nullptr), this);
 		if(valid()) {
-			on_valid_context_creation();
+			if(!on_valid_context_creation()) {
+				return FALSE;
+			}
 		}
 		return valid();
 	}
@@ -46,19 +47,27 @@ public:
 
 	void show(int nCmdShow) { ShowWindow(get_window(), nCmdShow); }
 
+
+protected:
+	virtual LRESULT handle_message(UINT msg, WPARAM wp, LPARAM lp) = 0;
+	[[nodiscard]] virtual LPCWSTR class_name() const = 0;
+
+	virtual BOOL on_valid_context_creation() { return TRUE; }
+
 private:
 	static LRESULT CALLBACK s_win_proc(HWND hwnd, UINT msg, WPARAM wp,
 									   LPARAM lp) {
-		derived_t *state;
+		using win_t = Win32Context<derived_t>;
+		win_t *state;
 		if (msg == WM_CREATE) {
 			auto *cs = reinterpret_cast<CREATESTRUCT *>(lp);
-			state = reinterpret_cast<derived_t *>(cs->lpCreateParams);
+			state = reinterpret_cast<win_t *>(cs->lpCreateParams);
 			SetWindowLongPtr(hwnd, GWLP_USERDATA,
 							 reinterpret_cast<LONG_PTR>(state));
 
 			state->m_window = hwnd;
 		} else {
-			state = reinterpret_cast<derived_t *>(
+			state = reinterpret_cast<win_t *>(
 				GetWindowLongPtr(hwnd, GWLP_USERDATA));
 		}
 
@@ -69,15 +78,8 @@ private:
 		}
 	}
 
-public:
-	virtual LRESULT handle_message(UINT msg, WPARAM wp, LPARAM lp) = 0;
-	[[nodiscard]] virtual LPCWSTR class_name() const = 0;
-
-protected:
-	virtual void on_valid_context_creation() {}
-
-private:
 	HWND m_window;
+	WNDCLASS m_wndClass;
 };
 
 #endif // NPP_WIN32CONTEXT_HPP

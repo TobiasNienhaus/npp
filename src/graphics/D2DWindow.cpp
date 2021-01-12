@@ -28,7 +28,7 @@ LPCWSTR D2DWindow::class_name() const {
 	return L"npp Direct2D context";
 }
 
-D2DWindow::D2DWindow() : m_factory{nullptr}, m_renderTarget{nullptr} {}
+D2DWindow::D2DWindow() : m_factory{nullptr}, m_renderTarget{nullptr}, m_writeFactory{nullptr} {}
 
 HRESULT D2DWindow::create_device_dependent_resources() {
 	HRESULT hr = S_OK;

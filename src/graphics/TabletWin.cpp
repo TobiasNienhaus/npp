@@ -109,6 +109,7 @@ void TabletWin::discard_device_dependent_resources() {
 	D2DWindow::discard_device_dependent_resources();
 }
 
-void TabletWin::on_valid_context_creation() {
+BOOL TabletWin::on_valid_context_creation() {
 	m_tablet.set_hwnd(get_window());
+	return TRUE;
 }

@@ -25,7 +25,7 @@ private:
 protected:
 	void draw() override;
 
-	void on_valid_context_creation() override;
+	BOOL on_valid_context_creation() override;
 
 	HRESULT create_device_independent_resources() override;
 	void discard_device_independent_resources() override;

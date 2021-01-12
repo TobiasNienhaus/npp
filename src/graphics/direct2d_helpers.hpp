@@ -7,11 +7,12 @@
 
 #include <concepts>
 
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
+#include "../util/win_headers.hpp"
+
 #include <d2d1.h>
 #include <dwrite.h>
 #pragma comment(lib, "d2d1")
+#pragma comment(lib, "dwrite")
 
 namespace npp::graphics {
 
