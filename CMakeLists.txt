@@ -17,7 +17,7 @@ add_executable(npp WIN32
 			   src/util/random.cpp
 			   src/graphics/D3D10Window.cpp
 			   src/graphics/imgui/ImGuiHandler.cpp
-			   )
+			   src/graphics/ID2DRenderTargetProvider.hpp src/graphics/D2DDrawer.cpp src/graphics/D2DDrawer.hpp src/util/colorspaces.cpp)
 
 target_include_directories(npp PRIVATE
 						   external/imgui

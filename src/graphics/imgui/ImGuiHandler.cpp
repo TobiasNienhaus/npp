@@ -7,6 +7,7 @@
 #include <imgui.h>
 #include <imgui_impl_dx10.h>
 #include <imgui_impl_win32.h>
+#include <iostream>
 
 IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd,
 															 UINT msg,
@@ -36,12 +37,14 @@ void ImGuiHandler::frame() {
 
 	draw();
 
-	ImGui::Render();
-	ImVec4 clearCol{0.f, 0.f, 0.f, 0.f};
-	// TODO figure out what this does
+//	ImVec4 clearCol{0.f, 0.f, 0.f, 0.f};
 	m_device->OMSetRenderTargets(1, &m_renderTarget, nullptr);
-	m_device->ClearRenderTargetView(m_renderTarget, (float *)&clearCol);
-	ImGui_ImplDX10_RenderDrawData(ImGui::GetDrawData());
+//	m_device->ClearRenderTargetView(m_renderTarget, (float *)&clearCol);
+	ImGui::Render();
+	// TODO figure out what this does
+	auto *drawData = ImGui::GetDrawData();
+//	std::cout << "Rendering with: " << drawData->DisplaySize.x << '|' << drawData->DisplaySize.y << '\n';
+	ImGui_ImplDX10_RenderDrawData(drawData);
 }
 
 void ImGuiHandler::draw() {
@@ -53,6 +56,8 @@ LRESULT ImGuiHandler::handle_message(UINT msg, WPARAM wp, LPARAM lp) {
 
 	return 0;
 }
+
 void ImGuiHandler::set_render_target(ID3D10RenderTargetView *newTarget) {
+	std::cout << "Resize\n";
 	m_renderTarget = newTarget;
 }

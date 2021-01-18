@@ -8,6 +8,7 @@
 #include "../util/win_headers.hpp"
 
 #include <concepts>
+#include <iostream>
 
 template<typename derived_t>
 class Win32Context {
@@ -45,7 +46,9 @@ public:
 
 	BOOL valid() { return (get_window() ? TRUE : FALSE); }
 
-	void show(int nCmdShow) { ShowWindow(get_window(), nCmdShow); }
+	void show(int nCmdShow) {
+		ShowWindow(get_window(), nCmdShow);
+	}
 
 
 protected:
@@ -70,7 +73,9 @@ private:
 			state = reinterpret_cast<win_t *>(
 				GetWindowLongPtr(hwnd, GWLP_USERDATA));
 		}
-
+		if(msg != WM_PAINT && msg != WM_SETCURSOR) {
+//			std::cout << "MSG (HANDLER): " << msg << '\n';
+		}
 		if (state) {
 			return state->handle_message(msg, wp, lp);
 		} else {
