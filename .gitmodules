@@ -1,1 +1,4 @@
 
+[submodule "external/json"]
+	path = external/json
+	url = https://github.com/ArthurSonzogni/nlohmann_json_cmake_fetchcontent.git
