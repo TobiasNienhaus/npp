@@ -109,7 +109,7 @@ BOOL D3D10Window::on_valid_context_creation() {
 
 	m_imgui = std::make_unique<ImGuiHandler>(get_window(), m_device,
 											 m_mainRenderTargetView);
-	m_drawer = std::make_unique<D2DDrawer>();
+	m_drawer = std::make_unique<D2DBitmapAdapter<TabletDrawer>>(get_window());
 	m_drawer->set_render_target(m_d2dRenderTarget);
 	hr = m_drawer->initialize();
 	return FAILED(hr) ? FALSE : TRUE;
@@ -117,6 +117,7 @@ BOOL D3D10Window::on_valid_context_creation() {
 
 LRESULT D3D10Window::handle_message(UINT msg, WPARAM wp, LPARAM lp) {
 	if (m_imgui && m_imgui->handle_message(msg, wp, lp)) { return true; }
+	if (m_drawer && m_drawer->handle_message(msg, wp, lp)) { return true; }
 	//	if (msg != WM_PAINT && msg != WM_SETCURSOR) {
 	//	std::cout << "MSG: " << msg << '\n';
 	//	}

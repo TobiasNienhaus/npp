@@ -11,7 +11,8 @@
 #include "../util/d3d10_headers.hpp"
 
 #include "ID2DRenderTargetProvider.hpp"
-#include "D2DDrawer.hpp"
+#include "TabletDrawer.hpp"
+#include "D2DBitmapAdapter.hpp"
 
 #include "Win32Context.hpp"
 
@@ -27,7 +28,7 @@ private:
 
 	std::unique_ptr<ImGuiHandler> m_imgui;
 
-	std::unique_ptr<D2DDrawer> m_drawer;
+	std::unique_ptr<D2DBitmapAdapter<TabletDrawer>> m_drawer;
 
 	HRESULT create_render_target();
 	HRESULT create_d2d_render_target(bool debug = false);

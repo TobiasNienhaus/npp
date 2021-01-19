@@ -24,6 +24,14 @@ void com_safe_release(T **comObj) requires std::is_base_of_v<IUnknown, T> {
 	}
 }
 
+template <typename T>
+void com_safe_release(CComPtr<T> &comPtr) requires std::is_base_of_v<IUnknown, T> {
+	if(comPtr) {
+		comPtr.Release();
+		comPtr = nullptr;
+	}
+}
+
 }
 
 #endif // NPP_DIRECT2D_HELPERS_HPP

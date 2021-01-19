@@ -25,6 +25,7 @@ ImGuiHandler::ImGuiHandler(HWND window, ID3D10Device *device, ID3D10RenderTarget
 	ImGui_ImplWin32_Init(m_window);
 	ImGui_ImplDX10_Init(m_device);
 }
+
 ImGuiHandler::~ImGuiHandler() {
 	ImGui_ImplDX10_Shutdown();
 	ImGui_ImplWin32_Shutdown();
@@ -37,18 +38,32 @@ void ImGuiHandler::frame() {
 
 	draw();
 
-//	ImVec4 clearCol{0.f, 0.f, 0.f, 0.f};
 	m_device->OMSetRenderTargets(1, &m_renderTarget, nullptr);
-//	m_device->ClearRenderTargetView(m_renderTarget, (float *)&clearCol);
 	ImGui::Render();
 	// TODO figure out what this does
 	auto *drawData = ImGui::GetDrawData();
-//	std::cout << "Rendering with: " << drawData->DisplaySize.x << '|' << drawData->DisplaySize.y << '\n';
 	ImGui_ImplDX10_RenderDrawData(drawData);
 }
 
 void ImGuiHandler::draw() {
-	ImGui::ShowDemoWindow();
+	ImGui::BeginMainMenuBar();
+	if(ImGui::BeginMenu("File")) {
+		if(ImGui::MenuItem("Test...")) {
+			std::cout << "Hello there!\n";
+		}
+		ImGui::EndMenu();
+	}
+	if(ImGui::BeginMenu("Settings")) {
+		if(ImGui::MenuItem("Print something", nullptr)) {
+			std::cout << "Printed something!\n";
+		}
+		ImGui::Separator();
+		if(ImGui::MenuItem("Print something more", nullptr)) {
+			std::cout << "Printed something more!\n";
+		}
+		ImGui::EndMenu();
+	}
+	ImGui::EndMainMenuBar();
 }
 
 LRESULT ImGuiHandler::handle_message(UINT msg, WPARAM wp, LPARAM lp) {

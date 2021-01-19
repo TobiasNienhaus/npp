@@ -16,6 +16,8 @@ private:
 	ID2D1RenderTarget *m_renderTarget;
 	ID2D1Factory *m_factory;
 
+	HWND m_window;
+
 protected:
 	virtual void draw();
 
@@ -27,15 +29,19 @@ protected:
 	ID2D1RenderTarget *get_render_target();
 	ID2D1Factory *get_factory();
 
+	HWND get_window();
+
 public:
 //	explicit D2DDrawer(ID2DRenderTargetProvider &renderTargetProvider);
-	D2DDrawer();
+	explicit D2DDrawer(HWND hwnd);
 
 	HRESULT initialize();
 
-	void set_render_target(ID2D1RenderTarget *renderTarget);
+	virtual void set_render_target(ID2D1RenderTarget *renderTarget);
 	BOOL paint_event();
 	virtual void discard_all_resources();
+
+	virtual BOOL handle_message(UINT msg, WPARAM wp, LPARAM lp);
 };
 
 #endif // NPP_D2DDRAWER_HPP

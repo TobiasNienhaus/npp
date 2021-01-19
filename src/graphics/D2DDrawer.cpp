@@ -6,7 +6,10 @@
 
 #include "direct2d_helpers.hpp"
 
-D2DDrawer::D2DDrawer() : m_renderTarget{nullptr}, m_factory{nullptr} {}
+D2DDrawer::D2DDrawer(HWND hwnd) :
+	m_renderTarget{nullptr},
+	m_factory{nullptr},
+	m_window{hwnd} {}
 
 void D2DDrawer::draw() {}
 
@@ -16,7 +19,7 @@ HRESULT D2DDrawer::initialize() {
 }
 
 BOOL D2DDrawer::paint_event() {
-//	HRESULT hr = create_device_dependent_resources();
+	//	HRESULT hr = create_device_dependent_resources();
 	HRESULT hr{S_OK};
 	if (SUCCEEDED(hr)) {
 		// TODO Has to be enveloped by BeginDraw and EndDraw
@@ -26,7 +29,7 @@ BOOL D2DDrawer::paint_event() {
 
 		hr = m_renderTarget->EndDraw();
 		if (FAILED(hr) || hr == D2DERR_RECREATE_TARGET) {
-//			discard_device_dependent_resources();
+			//			discard_device_dependent_resources();
 			return FALSE;
 		}
 	}
@@ -39,17 +42,17 @@ void D2DDrawer::discard_all_resources() {
 }
 
 HRESULT D2DDrawer::create_device_dependent_resources() {
-//	HRESULT hr{S_OK};
-//	if (!m_renderTarget) {
-//		hr = m_renderTargetProvider.get_d2d_render_target(m_factory,
-//														  &m_renderTarget);
-//	}
-//	return hr;
+	//	HRESULT hr{S_OK};
+	//	if (!m_renderTarget) {
+	//		hr = m_renderTargetProvider.get_d2d_render_target(m_factory,
+	//														  &m_renderTarget);
+	//	}
+	//	return hr;
 	return S_OK;
 }
 
 void D2DDrawer::discard_device_dependent_resources() {
-//	npp::graphics::com_safe_release(&m_renderTarget);
+	//	npp::graphics::com_safe_release(&m_renderTarget);
 }
 
 HRESULT D2DDrawer::create_device_independent_resources() {
@@ -70,5 +73,15 @@ ID2D1Factory *D2DDrawer::get_factory() {
 }
 
 void D2DDrawer::set_render_target(ID2D1RenderTarget *renderTarget) {
+	discard_device_dependent_resources();
 	m_renderTarget = renderTarget;
+	create_device_dependent_resources();
+}
+
+HWND D2DDrawer::get_window() {
+	return m_window;
+}
+
+BOOL D2DDrawer::handle_message(UINT msg, WPARAM wp, LPARAM lp) {
+	return FALSE;
 }
