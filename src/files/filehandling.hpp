@@ -6,6 +6,7 @@
 #define NPP_FILEHANDLING_HPP
 
 #include <string>
+#include <optional>
 
 #include "../util/win_headers.hpp"
 
@@ -18,7 +19,7 @@ class Line;
 
 namespace npp::file {
 
-HRESULT file_open_dialogue(HWND owner = nullptr);
+std::optional<std::wstring> get_filename();
 
 }
 

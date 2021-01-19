@@ -183,11 +183,6 @@ LRESULT D3D10Window::handle_message(UINT msg, WPARAM wp, LPARAM lp) {
 
 		return 1;
 	}
-	case WM_KEYDOWN: {
-		if(wp == 'A' || wp == 'a') {
-//			npp::file::file_open_dialogue(get_window());
-		}
-	}
 	default:
 		return DefWindowProc(get_window(), msg, wp, lp);
 	}
