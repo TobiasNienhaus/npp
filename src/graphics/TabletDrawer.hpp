@@ -33,6 +33,8 @@ private:
 public:
 	explicit TabletDrawer(HWND hwnd);
 	BOOL handle_message(UINT msg, WPARAM wp, LPARAM lp) override;
+
+	void after_draw() override;
 };
 
 #endif // NPP_TABLETDRAWER_HPP

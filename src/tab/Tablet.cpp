@@ -6,6 +6,8 @@
 
 #include <iostream>
 
+#include <imgui.h>
+
 #include "tablet_props.hpp"
 #include "tablet_util.hpp"
 
@@ -102,6 +104,7 @@ void Tablet::pen_enter(Tablet::pointerid_t id) {
 
 		read_properties();
 		m_valid = true;
+		m_penInFrame = true;
 	} else {
 		// TODO some error handling
 	}
@@ -113,37 +116,43 @@ void Tablet::pen_exit(Tablet::pointerid_t id) {
 		clear_props();
 		m_valid = false;
 		m_pointer = 0;
+		m_penInFrame = false;
 	}
 }
 
 void Tablet::update() {
-	if (!m_valid || !m_down) {
+	if (!m_valid || util::id_to_type(m_pointer) != util::PointerType::PEN) {
 		return;
-	} else {
-		// FIXME same event may be used twice
-		if (util::id_to_type(m_pointer) == util::PointerType::PEN) {
-			POINTER_PEN_INFO info[16];
-			UINT32 count = 16;
-			if (!GetPointerPenInfoHistory(m_pointer, &count, info)) {
-				std::cout << "Could not get pointer history!" << GetLastError()
-						  << '\n';
+	} else if (!m_down) {
+		POINTER_PEN_INFO info;
+		if (!GetPointerPenInfo(m_pointer, &info)) {
+			std::cout << "Could not get pointer info\n";
+		} else {
+			auto p{info.pointerInfo.ptPixelLocation};
+			if (ScreenToClient(info.pointerInfo.hwndTarget, &p)) {
+				m_lastPenPos = {false, static_cast<float>(p.x),
+								static_cast<float>(p.y), 0.f};
 			} else {
-				for (unsigned int i = count; i-- > 0;) {
-					auto p{info[i].pointerInfo.ptPixelLocationRaw};
-					if (ScreenToClient(info[i].pointerInfo.hwndTarget, &p)) {
-						PointData pd{true, static_cast<float>(p.x),
-									 static_cast<float>(p.y),
-									 m_pressure.normalize(info[i].pressure)};
-						m_points.push(pd);
-					} else {
-						std::cout
-							<< "Point could not be converted to client space\n";
-					}
-				}
-				// FIXME probably also a hack
-				if (m_windowHandle) {
-					RedrawWindow(m_windowHandle, nullptr, nullptr,
-								 RDW_INTERNALPAINT);
+				std::cout << "Point could not be converted to client space\n";
+			}
+		}
+	} else {
+		POINTER_PEN_INFO info[16];
+		UINT32 count = 16;
+		if (!GetPointerPenInfoHistory(m_pointer, &count, info)) {
+			std::cout << "Could not get pointer history!" << GetLastError()
+					  << '\n';
+		} else {
+			for (unsigned int i = count; i-- > 0;) {
+				auto p{info[i].pointerInfo.ptPixelLocation};
+				if (ScreenToClient(info[i].pointerInfo.hwndTarget, &p)) {
+					PointData pd{true, static_cast<float>(p.x),
+								 static_cast<float>(p.y),
+								 m_pressure.normalize(info[i].pressure)};
+					m_points.push(pd);
+				} else {
+					std::cout
+						<< "Point could not be converted to client space\n";
 				}
 			}
 		}
@@ -151,11 +160,23 @@ void Tablet::update() {
 }
 
 void Tablet::pen_down(pointerid_t id) {
-	if (id == m_pointer) { m_down = true; }
+	if (id == m_pointer) {
+		if (auto &io = ImGui::GetIO(); io.WantCaptureMouse) {
+			io.MouseDown[0] = true;
+		} else {
+			m_down = true;
+		}
+	}
 }
 
 void Tablet::pen_up(pointerid_t id) {
-	if (id == m_pointer) { m_down = false; }
+	if (id == m_pointer) {
+		if (auto &io = ImGui::GetIO(); io.WantCaptureMouse) {
+			io.MouseDown[0] = false;
+		} else {
+			m_down = false;
+		}
+	}
 }
 
 Tablet::PointData Tablet::get_next() {
@@ -199,9 +220,7 @@ Tablet::Event Tablet::handle_event(UINT msg, WPARAM wp) {
 	}
 		return Event::UP;
 	case WM_POINTERUPDATE:
-		if(id == m_pointer) {
-			update();
-		}
+		if (id == m_pointer) { update(); }
 		return Event::UPDATE;
 	default:
 		return Event::UNHANDLED;
@@ -210,6 +229,13 @@ Tablet::Event Tablet::handle_event(UINT msg, WPARAM wp) {
 
 void Tablet::set_hwnd(HWND hwnd) {
 	m_windowHandle = hwnd;
+}
+std::optional<Tablet::PointData> Tablet::get_pen_pos() {
+	if (m_penInFrame) {
+		return m_lastPenPos;
+	} else {
+		return {};
+	}
 }
 
 float Tablet::Property::normalize(INT32 val, bool shouldClamp) const {

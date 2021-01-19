@@ -85,3 +85,5 @@ HWND D2DDrawer::get_window() {
 BOOL D2DDrawer::handle_message(UINT msg, WPARAM wp, LPARAM lp) {
 	return FALSE;
 }
+
+void D2DDrawer::after_draw() {}

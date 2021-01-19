@@ -13,6 +13,7 @@ public:
 	ImGuiHandler(HWND window, ID3D10Device *device, ID3D10RenderTargetView *renderTarget);
 	virtual ~ImGuiHandler();
 
+	void frame_prep();
 	void frame();
 	LRESULT handle_message(UINT msg, WPARAM wp, LPARAM lp);
 	void set_render_target(ID3D10RenderTargetView *newTarget);

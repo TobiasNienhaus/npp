@@ -169,6 +169,8 @@ LRESULT D3D10Window::handle_message(UINT msg, WPARAM wp, LPARAM lp) {
 			create_d2d_render_target();
 			std::cerr << "?\n";
 		}
+		m_imgui->frame_prep();
+		m_drawer->after_draw();
 		m_imgui->frame();
 		m_swapChain->Present(0, 0);
 		return 1;

@@ -31,9 +31,12 @@ ImGuiHandler::~ImGuiHandler() {
 	ImGui_ImplWin32_Shutdown();
 }
 
-void ImGuiHandler::frame() {
+void ImGuiHandler::frame_prep() {
 	ImGui_ImplDX10_NewFrame();
 	ImGui_ImplWin32_NewFrame();
+}
+
+void ImGuiHandler::frame() {
 	ImGui::NewFrame();
 
 	draw();
@@ -64,6 +67,8 @@ void ImGuiHandler::draw() {
 		ImGui::EndMenu();
 	}
 	ImGui::EndMainMenuBar();
+
+	ImGui::ShowDemoWindow();
 }
 
 LRESULT ImGuiHandler::handle_message(UINT msg, WPARAM wp, LPARAM lp) {

@@ -70,6 +70,10 @@ public:
 		D2DDrawer::set_render_target(renderTarget);
 		m_drawer.set_render_target(m_bitmapTarget);
 	}
+
+	void after_draw() override {
+		m_drawer.after_draw();
+	}
 };
 
 #endif // NPP_D2DBITMAPADAPTER_HPP

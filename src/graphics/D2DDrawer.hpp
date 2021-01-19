@@ -41,6 +41,8 @@ public:
 	BOOL paint_event();
 	virtual void discard_all_resources();
 
+	virtual void after_draw();
+
 	virtual BOOL handle_message(UINT msg, WPARAM wp, LPARAM lp);
 };
 

@@ -4,6 +4,9 @@
 
 #include "TabletDrawer.hpp"
 #include "direct2d_helpers.hpp"
+
+#include <imgui.h>
+
 TabletDrawer::TabletDrawer(HWND hwnd) :
 	D2DDrawer(hwnd),
 	m_tablet{hwnd},
@@ -57,4 +60,12 @@ HRESULT TabletDrawer::create_device_dependent_resources() {
 void TabletDrawer::discard_device_dependent_resources() {
 	npp::graphics::com_safe_release(m_brush);
 	D2DDrawer::discard_device_dependent_resources();
+}
+
+void TabletDrawer::after_draw() {
+	auto pos = m_tablet.get_pen_pos();
+	if(pos.has_value()) {
+		auto &io = ImGui::GetIO();
+		io.MousePos = {pos->x, pos->y};
+	}
 }

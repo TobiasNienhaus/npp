@@ -9,6 +9,7 @@
 #include <Windows.h>
 
 #include <queue>
+#include <optional>
 
 namespace npp {
 
@@ -69,6 +70,8 @@ public:
 	}
 	std::vector<PointData> get_all();
 
+	std::optional<PointData> get_pen_pos();
+
 	void update();
 
 private:
@@ -77,6 +80,8 @@ private:
 	pointerid_t m_pointer;
 	// maybe use vector, if it has push (back) and pop (front)
 	std::queue<PointData> m_points;
+	PointData m_lastPenPos;
+	bool m_penInFrame;
 
 	HWND m_windowHandle;
 
