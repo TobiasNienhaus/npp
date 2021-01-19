@@ -36,7 +36,7 @@ void TabletDrawer::draw() {
 	}
 	if (Globals::redraw_drawing_surface()) {
 		for (const auto &line : m_tablet.get_all_lines()) {
-			npp::Tablet::PointData lastPoint{};
+			npp::tablet_types::PointData lastPoint{};
 			for (const auto &p : line) {
 				if (lastPoint.valid) {
 					auto a = D2D1::Point2F(lastPoint.x, lastPoint.y);

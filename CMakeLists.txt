@@ -4,6 +4,7 @@ project(npp)
 set(CMAKE_CXX_STANDARD 20)
 
 add_subdirectory(external/imgui)
+add_subdirectory(external/json)
 
 add_executable(npp WIN32
 			   src/main.cpp
@@ -21,11 +22,13 @@ add_executable(npp WIN32
 			   src/util/colorspaces.cpp
 			   src/graphics/D2DBitmapAdapter.cpp
 			   src/graphics/TabletDrawer.cpp
-			   src/globals.cpp src/globals.hpp)
+			   src/globals.cpp
+			   src/files/json_handling.cpp src/files/json_handling.hpp src/files/filehandling.cpp src/files/filehandling.hpp)
 
 target_include_directories(npp PRIVATE
 						   external/imgui
+						   external/json/include
 						   external/magic_enum
 						   )
 
-target_link_libraries(npp PRIVATE imgui_win32)
+target_link_libraries(npp PRIVATE imgui_win32 nlohmann_json)

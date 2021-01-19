@@ -73,9 +73,6 @@ private:
 			state = reinterpret_cast<win_t *>(
 				GetWindowLongPtr(hwnd, GWLP_USERDATA));
 		}
-		if(msg != WM_PAINT && msg != WM_SETCURSOR) {
-//			std::cout << "MSG (HANDLER): " << msg << '\n';
-		}
 		if (state) {
 			return state->handle_message(msg, wp, lp);
 		} else {

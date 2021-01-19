@@ -18,7 +18,7 @@ private:
 
 private:
 	npp::Tablet m_tablet;
-	npp::Tablet::PointData m_lastPoint;
+	npp::tablet_types::PointData m_lastPoint;
 	CComPtr<ID2D1SolidColorBrush> m_brush;
 
 	void draw() override;

@@ -15,7 +15,7 @@ public:
 
 private:
 	npp::Tablet m_tablet;
-	npp::Tablet::PointData m_lastPoint;
+	npp::tablet_types::PointData m_lastPoint;
 
 	IDWriteTextFormat *m_textFormat{};
 	ID2D1SolidColorBrush *m_brush{};

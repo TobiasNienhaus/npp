@@ -11,6 +11,8 @@
 
 #include "../../globals.hpp"
 
+#include "../../files/filehandling.hpp"
+
 IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd,
 															 UINT msg,
 															 WPARAM wParam,
@@ -58,6 +60,9 @@ void ImGuiHandler::draw() {
 		}
 		if(ImGui::MenuItem("Redraw")) {
 			Globals::redraw_drawing_surface() = true;
+		}
+		if(ImGui::MenuItem("Open")) {
+			Globals::show_dialog() = true;
 		}
 		ImGui::EndMenu();
 	}

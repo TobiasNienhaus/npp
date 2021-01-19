@@ -11,9 +11,46 @@
 #include <queue>
 #include <optional>
 
+#include <nlohmann/json_fwd.hpp>
+
 namespace npp {
 
+namespace tablet_types {
+struct PointData {
+	bool valid{false};
+	float x{};
+	float y{};
+	float pressure{};
+};
+
+class Line {
+public:
+	using container_t = std::vector<PointData>;
+	using cit_t = container_t::const_iterator;
+	using it_t = container_t::iterator;
+
+private:
+	container_t m_points;
+
+public:
+	Line() = default;
+	void push(PointData pd);
+	[[nodiscard]] const container_t &points() const;
+	container_t &points();
+
+	[[nodiscard]] cit_t begin() const;
+	[[nodiscard]] it_t begin();
+	[[nodiscard]] cit_t end() const;
+	[[nodiscard]] it_t end();
+};
+
+}
+
 class Tablet {
+private:
+	using point_data_t = tablet_types::PointData;
+	using line_t = tablet_types::Line;
+
 public:
 	enum class Event {
 		LEAVE,
@@ -22,34 +59,6 @@ public:
 		UP,
 		UPDATE,
 		UNHANDLED
-	};
-
-	struct PointData {
-		bool valid{false};
-		float x{};
-		float y{};
-		float pressure{};
-	};
-
-	class Line {
-	public:
-		using container_t = std::vector<PointData>;
-		using cit_t = container_t::const_iterator;
-		using it_t = container_t::iterator;
-
-	private:
-		container_t m_points;
-
-	public:
-		Line() = default;
-		void push(PointData pd);
-		[[nodiscard]] const container_t &points() const;
-		container_t &points();
-
-		[[nodiscard]] cit_t begin() const;
-		[[nodiscard]] it_t begin();
-		[[nodiscard]] cit_t end() const;
-		[[nodiscard]] it_t end();
 	};
 
 public:
@@ -80,33 +89,33 @@ public:
 	void pen_down(pointerid_t id);
 	void pen_up(pointerid_t id);
 
-	PointData get_next();
+	point_data_t get_next();
 	template<size_t count>
-	std::array<PointData, count> get_next_n() {
-		std::array<PointData, count> ret;
+	std::array<point_data_t, count> get_next_n() {
+		std::array<point_data_t, count> ret;
 		for (int i = 0; i < count; ++i) {
 			ret[i] = get_next();
 		}
 		return ret;
 	}
-	std::vector<PointData> get_all();
+	std::vector<point_data_t> get_all();
 
-	std::optional<PointData> get_pen_pos();
+	std::optional<point_data_t> get_pen_pos();
 
 	void update();
 
-	const std::vector<Line> &get_all_lines();
+	const std::vector<line_t> &get_all_lines();
 
 private:
 	bool m_valid;
 	bool m_down;
 	pointerid_t m_pointer;
 	// maybe use vector, if it has push (back) and pop (front)
-	std::queue<PointData> m_points;
-	PointData m_lastPenPos;
-	bool m_penInFrame;
+	std::queue<point_data_t> m_points;
+	point_data_t m_lastPenPos;
+	bool m_penInFrame{};
 
-	std::vector<Line> m_lines;
+	std::vector<line_t> m_lines;
 
 	HWND m_windowHandle;
 

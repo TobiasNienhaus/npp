@@ -10,6 +10,9 @@
 
 #include "direct2d_helpers.hpp"
 
+#include "../files/filehandling.hpp"
+#include "../globals.hpp"
+
 void ErrorDescription(HRESULT hr) {
 	if (FACILITY_WINDOWS == HRESULT_FACILITY(hr)) hr = HRESULT_CODE(hr);
 	TCHAR *szErrMsg;
@@ -51,6 +54,7 @@ BOOL D3D10Window::on_valid_context_creation() {
 	flags |= D3D10_CREATE_DEVICE_BGRA_SUPPORT;
 
 	static const D3D10_FEATURE_LEVEL1 levelAttempts[] = {
+		D3D10_FEATURE_LEVEL_10_1,
 		D3D10_FEATURE_LEVEL_10_0,
 		D3D10_FEATURE_LEVEL_9_3,
 		D3D10_FEATURE_LEVEL_9_2,
@@ -62,6 +66,7 @@ BOOL D3D10Window::on_valid_context_creation() {
 	hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &m_d2dFactory);
 	if (FAILED(hr)) { return FALSE; }
 
+	int counter{};
 	for (auto levelAttempt : levelAttempts) {
 		ID3D10Device1 *device = nullptr;
 		hr = D3D10CreateDevice1(nullptr, D3D10_DRIVER_TYPE_HARDWARE, nullptr,
@@ -70,8 +75,10 @@ BOOL D3D10Window::on_valid_context_creation() {
 		if (SUCCEEDED(hr)) {
 			m_device = device;
 			device = nullptr;
+			std::cout << "At level " << counter << '\n';
 			break;
 		}
+		++counter;
 	}
 
 	if (FAILED(hr)) { return FALSE; }
@@ -172,8 +179,14 @@ LRESULT D3D10Window::handle_message(UINT msg, WPARAM wp, LPARAM lp) {
 		m_imgui->frame_prep();
 		m_drawer->after_draw();
 		m_imgui->frame();
-		m_swapChain->Present(0, 0);
+		m_swapChain->Present(1, 0);
+
 		return 1;
+	}
+	case WM_KEYDOWN: {
+		if(wp == 'A' || wp == 'a') {
+//			npp::file::file_open_dialogue(get_window());
+		}
 	}
 	default:
 		return DefWindowProc(get_window(), msg, wp, lp);

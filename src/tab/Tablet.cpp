@@ -8,6 +8,8 @@
 
 #include <imgui.h>
 
+#include <nlohmann/json.hpp>
+
 #include "tablet_props.hpp"
 #include "tablet_util.hpp"
 
@@ -18,6 +20,7 @@ Tablet::Tablet(HWND hwnd) :
 	m_down{false},
 	m_pointer{0},
 	m_points{},
+	m_penInFrame{false},
 	m_windowHandle{hwnd},
 	m_pressure{s_pressureDefault},
 	m_tiltX{s_tiltXDefault},
@@ -111,6 +114,7 @@ void Tablet::pen_enter(Tablet::pointerid_t id) {
 		read_properties();
 		m_valid = true;
 		m_penInFrame = true;
+		std::cout << "Pointer " << m_pointer << " entered!\n";
 	} else {
 		// TODO some error handling
 	}
@@ -152,7 +156,7 @@ void Tablet::update() {
 			for (unsigned int i = count; i-- > 0;) {
 				auto p{info[i].pointerInfo.ptPixelLocation};
 				if (ScreenToClient(info[i].pointerInfo.hwndTarget, &p)) {
-					PointData pd{true, static_cast<float>(p.x),
+					point_data_t pd{true, static_cast<float>(p.x),
 								 static_cast<float>(p.y),
 								 m_pressure.normalize(info[i].pressure)};
 					m_points.push(pd);
@@ -187,20 +191,20 @@ void Tablet::pen_up(pointerid_t id) {
 	}
 }
 
-Tablet::PointData Tablet::get_next() {
+Tablet::point_data_t Tablet::get_next() {
 	if (m_points.empty()) {
 		return {};
 	} else {
-		auto p = PointData{m_points.front()};
+		auto p = point_data_t{m_points.front()};
 		m_points.pop();
 		return p;
 	}
 }
 
-std::vector<Tablet::PointData> Tablet::get_all() {
+std::vector<Tablet::point_data_t> Tablet::get_all() {
 	auto p = get_next();
 	if (!p.valid) { return {}; }
-	std::vector<PointData> ret;
+	std::vector<point_data_t> ret;
 	while (p.valid) {
 		ret.push_back(p);
 		p = get_next();
@@ -238,7 +242,7 @@ Tablet::Event Tablet::handle_event(UINT msg, WPARAM wp) {
 void Tablet::set_hwnd(HWND hwnd) {
 	m_windowHandle = hwnd;
 }
-std::optional<Tablet::PointData> Tablet::get_pen_pos() {
+std::optional<Tablet::point_data_t> Tablet::get_pen_pos() {
 	if (m_penInFrame) {
 		return m_lastPenPos;
 	} else {
@@ -246,7 +250,7 @@ std::optional<Tablet::PointData> Tablet::get_pen_pos() {
 	}
 }
 
-const std::vector<Tablet::Line> &Tablet::get_all_lines() {
+const std::vector<Tablet::line_t> &Tablet::get_all_lines() {
 	return m_lines;
 }
 
@@ -263,25 +267,27 @@ float Tablet::Property::normalize(INT32 val, bool shouldClamp) const {
 	}
 }
 
-void Tablet::Line::push(Tablet::PointData pd) {
+namespace tablet_types {
+void Line::push(PointData pd) {
 	m_points.push_back(pd);
 }
-const Tablet::Line::container_t &Tablet::Line::points() const {
+const Line::container_t &Line::points() const {
 	return m_points;
 }
-Tablet::Line::container_t &Tablet::Line::points() {
+Line::container_t &Line::points() {
 	return m_points;
 }
-Tablet::Line::cit_t Tablet::Line::begin() const {
+Line::cit_t Line::begin() const {
 	return m_points.cbegin();
 }
-Tablet::Line::cit_t Tablet::Line::end() const {
+Line::cit_t Line::end() const {
 	return m_points.cend();
 }
-Tablet::Line::it_t Tablet::Line::begin() {
+Line::it_t Line::begin() {
 	return m_points.begin();
 }
-Tablet::Line::it_t Tablet::Line::end() {
+Line::it_t Line::end() {
 	return m_points.end();
+}
 }
 } // namespace npp

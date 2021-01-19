@@ -16,3 +16,7 @@ bool &Globals::clear_drawing_surface() {
 bool &Globals::redraw_drawing_surface() {
 	return instance().m_redrawDrawingSurface;
 }
+
+bool &Globals::show_dialog() {
+	return instance().m_showDialog;
+}

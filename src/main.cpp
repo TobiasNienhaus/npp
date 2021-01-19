@@ -2,11 +2,17 @@
 #define _UNICODE
 
 #include <iostream>
+#include <nlohmann/json.hpp>
 
 #include "util/win_headers.hpp"
-#include <winuser.h>
 
 #include "graphics/D3D10Window.hpp"
+
+#include "files/json_handling.hpp"
+#include "tab/Tablet.hpp"
+#include "util/random.h"
+
+#include "files/filehandling.hpp"
 
 #include "tab/tablet_props.hpp"
 
@@ -19,27 +25,32 @@ void weird_console_hack() {
 	freopen_s(&fp, "CONOUT$", "w", stdout);
 }
 
+void json_test();
+void file_test();
+
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
-				   LPWSTR lpCmdLine, int nCmdShow) {
-	auto hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
-	if(FAILED(hr)) {
+					LPWSTR lpCmdLine, int nCmdShow) {
+	auto hr = CoInitializeEx(nullptr,
+							 COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+	if (FAILED(hr)) {
 		PostQuitMessage(-1);
 		return -1;
 	}
-
+	npp::file::file_open_dialogue();
 	weird_console_hack();
+//	json_test();
 	D3D10Window window;
 
-	if(!window.create(L"NPP", WS_OVERLAPPEDWINDOW)) {
-		return 1;
-	}
+	if (!window.create(L"NPP", WS_OVERLAPPEDWINDOW)) { return 1; }
 
 	std::cout << "Test\n";
 	window.show(nCmdShow);
 	std::cout << "Test2\n";
 
+	npp::file::file_open_dialogue();
+
 	MSG msg{};
-	while(GetMessage(&msg, nullptr, 0, 0)) {
+	while (GetMessage(&msg, nullptr, 0, 0)) {
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}
@@ -77,8 +88,8 @@ void print_all_device_properties() {
 	UINT32 deviceCount = maxDevices;
 	POINTER_DEVICE_INFO devices[maxDevices];
 	if (!GetPointerDevices(&deviceCount, devices)) {
-		std::cerr << "SOMETHING FAILED! (print_all_device_properties)" << GetLastError()
-				  << '\n';
+		std::cerr << "SOMETHING FAILED! (print_all_device_properties)"
+				  << GetLastError() << '\n';
 		return;
 	}
 	for (int i = 0; i < deviceCount; ++i) {
@@ -91,4 +102,23 @@ void print_all_device_properties() {
 			std::cerr << "String convert error!\n";
 		print_device_properties(devices[i].device);
 	}
+}
+
+void json_test() {
+	namespace tt = npp::tablet_types;
+	using nlohmann::json;
+	std::vector<tt::Line> lines;
+	const unsigned int lineCount = npp::rnd::random(4u, 8u);
+	for (int i = 0; i < lineCount; ++i) {
+		auto &line = lines.emplace_back();
+		const unsigned int pointCount = npp::rnd::random(5u, 15u);
+		for (int j = 0; j < pointCount; ++j) {
+			line.push({npp::rnd::random<bool>(), npp::rnd::random(0.f, 1000.f),
+					   npp::rnd::random(0.f, 1500.f),
+					   npp::rnd::random_01<float>()});
+		}
+	}
+
+	json j{lines};
+	std::cout << j.dump(4) << '\n';
 }

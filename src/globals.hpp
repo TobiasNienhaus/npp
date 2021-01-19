@@ -23,10 +23,12 @@ public:
 private:
 	bool m_clearDrawingSurface{};
 	bool m_redrawDrawingSurface{};
+	bool m_showDialog{};
 
 public:
 	static bool &clear_drawing_surface();
 	static bool &redraw_drawing_surface();
+	static bool &show_dialog();
 
 };
 
