@@ -9,6 +9,8 @@
 #include <imgui_impl_win32.h>
 #include <iostream>
 
+#include "../../globals.hpp"
+
 IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd,
 															 UINT msg,
 															 WPARAM wParam,
@@ -50,25 +52,18 @@ void ImGuiHandler::frame() {
 
 void ImGuiHandler::draw() {
 	ImGui::BeginMainMenuBar();
-	if(ImGui::BeginMenu("File")) {
-		if(ImGui::MenuItem("Test...")) {
-			std::cout << "Hello there!\n";
+	if(ImGui::BeginMenu("Test")) {
+		if(ImGui::MenuItem("Clear")) {
+			Globals::clear_drawing_surface() = true;
 		}
-		ImGui::EndMenu();
-	}
-	if(ImGui::BeginMenu("Settings")) {
-		if(ImGui::MenuItem("Print something", nullptr)) {
-			std::cout << "Printed something!\n";
-		}
-		ImGui::Separator();
-		if(ImGui::MenuItem("Print something more", nullptr)) {
-			std::cout << "Printed something more!\n";
+		if(ImGui::MenuItem("Redraw")) {
+			Globals::redraw_drawing_surface() = true;
 		}
 		ImGui::EndMenu();
 	}
 	ImGui::EndMainMenuBar();
 
-	ImGui::ShowDemoWindow();
+//	ImGui::ShowDemoWindow();
 }
 
 LRESULT ImGuiHandler::handle_message(UINT msg, WPARAM wp, LPARAM lp) {

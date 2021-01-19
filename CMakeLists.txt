@@ -21,7 +21,7 @@ add_executable(npp WIN32
 			   src/util/colorspaces.cpp
 			   src/graphics/D2DBitmapAdapter.cpp
 			   src/graphics/TabletDrawer.cpp
-			   )
+			   src/globals.cpp src/globals.hpp)
 
 target_include_directories(npp PRIVATE
 						   external/imgui

@@ -24,12 +24,9 @@ Tablet::Tablet(HWND hwnd) :
 	m_tiltY{s_tiltYDefault} {}
 
 void Tablet::read_properties() {
-	UINT32 propertyCount = s_maxProperties;
-	POINTER_DEVICE_PROPERTY properties[s_maxProperties];
-
 	POINTER_INFO info;
 	if (!GetPointerInfo(m_pointer, &info)) {
-		std::cerr << "could not get pointer info for pointer " << m_pointer
+		std::cout << "could not get pointer info for pointer " << m_pointer
 				  << '\n';
 		m_pointer = 0;
 		m_valid = false;
@@ -37,9 +34,13 @@ void Tablet::read_properties() {
 		return;
 	}
 
+	UINT32 propertyCount = s_maxProperties;
+	POINTER_DEVICE_PROPERTY properties[s_maxProperties];
+
 	if (!GetPointerDeviceProperties(info.sourceDevice, &propertyCount,
 									properties)) {
-		std::cerr << "Failed reading props" << GetLastError() << '\n';
+		std::cout << "Failed reading props " << GetLastError() << '\n';
+		std::cout << "Read " << propertyCount << " properties\n";
 		set_properties_to_default();
 		return;
 	}
@@ -49,6 +50,11 @@ void Tablet::read_properties() {
 		case props::Usage::TIP_PRESSURE:
 			std::cout << "PRESS MIN: " << prop.logicalMin
 					  << ", PRESS MAX: " << prop.logicalMax << '\n';
+			std::cout << "PRESS PHYS MIN: " << prop.physicalMin
+					  << ", PRESS PHYS MAX: " << prop.physicalMax << '\n';
+			break;
+		case props::Usage::BARREL_PRESSURE:
+			std::cout << "BARREL MIN: " << prop.logicalMin << ", BARREL MAX: " << prop.logicalMax << '\n';
 			m_pressure = {.initialized = true,
 						  .usagePageId = prop.usagePageId,
 						  .usageId = prop.usageId,
@@ -73,7 +79,7 @@ void Tablet::read_properties() {
 			break;
 		}
 	}
-	set_properties_to_default();
+//	set_properties_to_default();
 }
 
 void Tablet::clear_props() {
@@ -150,6 +156,7 @@ void Tablet::update() {
 								 static_cast<float>(p.y),
 								 m_pressure.normalize(info[i].pressure)};
 					m_points.push(pd);
+					m_lines.back().push(pd);
 				} else {
 					std::cout
 						<< "Point could not be converted to client space\n";
@@ -165,6 +172,7 @@ void Tablet::pen_down(pointerid_t id) {
 			io.MouseDown[0] = true;
 		} else {
 			m_down = true;
+			m_lines.emplace_back();
 		}
 	}
 }
@@ -238,6 +246,10 @@ std::optional<Tablet::PointData> Tablet::get_pen_pos() {
 	}
 }
 
+const std::vector<Tablet::Line> &Tablet::get_all_lines() {
+	return m_lines;
+}
+
 float Tablet::Property::normalize(INT32 val, bool shouldClamp) const {
 	auto ret =
 		static_cast<float>((static_cast<double>(val) - min) / (max - min));
@@ -251,4 +263,25 @@ float Tablet::Property::normalize(INT32 val, bool shouldClamp) const {
 	}
 }
 
+void Tablet::Line::push(Tablet::PointData pd) {
+	m_points.push_back(pd);
+}
+const Tablet::Line::container_t &Tablet::Line::points() const {
+	return m_points;
+}
+Tablet::Line::container_t &Tablet::Line::points() {
+	return m_points;
+}
+Tablet::Line::cit_t Tablet::Line::begin() const {
+	return m_points.cbegin();
+}
+Tablet::Line::cit_t Tablet::Line::end() const {
+	return m_points.cend();
+}
+Tablet::Line::it_t Tablet::Line::begin() {
+	return m_points.begin();
+}
+Tablet::Line::it_t Tablet::Line::end() {
+	return m_points.end();
+}
 } // namespace npp

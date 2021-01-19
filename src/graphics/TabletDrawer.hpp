@@ -15,14 +15,10 @@
 
 class TabletDrawer : public D2DDrawer {
 private:
-	struct Line {
-		std::queue<npp::Tablet::PointData> points;
-	};
 
 private:
 	npp::Tablet m_tablet;
 	npp::Tablet::PointData m_lastPoint;
-	std::deque<Line> m_lines;
 	CComPtr<ID2D1SolidColorBrush> m_brush;
 
 	void draw() override;

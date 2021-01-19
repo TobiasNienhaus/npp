@@ -24,19 +24,40 @@ public:
 		UNHANDLED
 	};
 
-public:
-	explicit Tablet(HWND hwnd = nullptr);
-
-	using pointerid_t = unsigned short;
-
-	static constexpr UINT32 s_maxProperties = 128;
-
 	struct PointData {
 		bool valid{false};
 		float x{};
 		float y{};
 		float pressure{};
 	};
+
+	class Line {
+	public:
+		using container_t = std::vector<PointData>;
+		using cit_t = container_t::const_iterator;
+		using it_t = container_t::iterator;
+
+	private:
+		container_t m_points;
+
+	public:
+		Line() = default;
+		void push(PointData pd);
+		[[nodiscard]] const container_t &points() const;
+		container_t &points();
+
+		[[nodiscard]] cit_t begin() const;
+		[[nodiscard]] it_t begin();
+		[[nodiscard]] cit_t end() const;
+		[[nodiscard]] it_t end();
+	};
+
+public:
+	explicit Tablet(HWND hwnd = nullptr);
+
+	using pointerid_t = unsigned short;
+
+	static constexpr UINT32 s_maxProperties = 512;
 
 	struct Property {
 		bool initialized;
@@ -74,6 +95,8 @@ public:
 
 	void update();
 
+	const std::vector<Line> &get_all_lines();
+
 private:
 	bool m_valid;
 	bool m_down;
@@ -82,6 +105,8 @@ private:
 	std::queue<PointData> m_points;
 	PointData m_lastPenPos;
 	bool m_penInFrame;
+
+	std::vector<Line> m_lines;
 
 	HWND m_windowHandle;
 
