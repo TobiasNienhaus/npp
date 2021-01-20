@@ -54,10 +54,8 @@ BOOL D3D10Window::on_valid_context_creation() {
 	flags |= D3D10_CREATE_DEVICE_BGRA_SUPPORT;
 
 	static const D3D10_FEATURE_LEVEL1 levelAttempts[] = {
-		D3D10_FEATURE_LEVEL_10_1,
-		D3D10_FEATURE_LEVEL_10_0,
-		D3D10_FEATURE_LEVEL_9_3,
-		D3D10_FEATURE_LEVEL_9_2,
+		D3D10_FEATURE_LEVEL_10_1, D3D10_FEATURE_LEVEL_10_0,
+		D3D10_FEATURE_LEVEL_9_3,  D3D10_FEATURE_LEVEL_9_2,
 		D3D10_FEATURE_LEVEL_9_1,
 	};
 
@@ -123,8 +121,13 @@ BOOL D3D10Window::on_valid_context_creation() {
 }
 
 LRESULT D3D10Window::handle_message(UINT msg, WPARAM wp, LPARAM lp) {
+	if(handle_file_ops()) {
+		return 0;
+	}
+
 	if (m_imgui && m_imgui->handle_message(msg, wp, lp)) { return true; }
 	if (m_drawer && m_drawer->handle_message(msg, wp, lp)) { return true; }
+
 	//	if (msg != WM_PAINT && msg != WM_SETCURSOR) {
 	//	std::cout << "MSG: " << msg << '\n';
 	//	}
@@ -165,6 +168,9 @@ LRESULT D3D10Window::handle_message(UINT msg, WPARAM wp, LPARAM lp) {
 				ErrorDescription(hr);
 				return 0;
 			}
+
+			Globals::clear_drawing_surface() = true;
+			Globals::redraw_drawing_surface() = true;
 		}
 	}
 		return 0;
@@ -180,7 +186,6 @@ LRESULT D3D10Window::handle_message(UINT msg, WPARAM wp, LPARAM lp) {
 		m_drawer->after_draw();
 		m_imgui->frame();
 		m_swapChain->Present(1, 0);
-
 		return 1;
 	}
 	default:
@@ -247,4 +252,37 @@ HRESULT D3D10Window::create_d2d_render_target(bool debug) {
 	}
 	if (m_drawer) { m_drawer->set_render_target(m_d2dRenderTarget); }
 	return hr;
+}
+
+void D3D10Window::save_file_as() {
+	auto filename{npp::file::get_filename(npp::file::OpenMode::SAVE)};
+	if (filename.has_value()) {
+		Globals::filename() = filename.value();
+		Globals::on_save_file();
+		Globals::has_unsaved_changes() = false;
+	}
+}
+
+void D3D10Window::save_file() {
+	auto &file = Globals::filename();
+	if (!file.has_value()) {
+		file = npp::file::get_filename(npp::file::OpenMode::SAVE);
+	}
+	if (file.has_value()) {
+		Globals::on_save_file();
+		Globals::has_unsaved_changes() = false;
+	}
+}
+
+void D3D10Window::open_file() {
+	auto filename{npp::file::get_filename(npp::file::OpenMode::OPEN)};
+	if (filename.has_value()) {
+		Globals::file_to_load() = filename.value();
+		Globals::on_open_file();
+	}
+}
+
+bool D3D10Window::handle_file_ops() {
+
+	return false;
 }

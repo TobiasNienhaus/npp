@@ -29,6 +29,8 @@ BOOL TabletDrawer::handle_message(UINT msg, WPARAM wp, LPARAM) {
 }
 
 void TabletDrawer::draw() {
+	get_render_target()->SetTransform(D2D1::Matrix3x2F::Identity());
+
 	if (Globals::clear_drawing_surface()) {
 		constexpr D2D1_COLOR_F clearCol{0.f, 0.f, 0.f, 0.f};
 		get_render_target()->Clear(clearCol);
@@ -49,7 +51,6 @@ void TabletDrawer::draw() {
 		}
 		Globals::redraw_drawing_surface() = false;
 	}
-	get_render_target()->SetTransform(D2D1::Matrix3x2F::Identity());
 
 	if (!m_lastPoint.valid) { m_lastPoint = m_tablet.get_next(); }
 	bool draw = true;

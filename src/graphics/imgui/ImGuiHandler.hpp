@@ -9,6 +9,13 @@
 #include "../../util/d3d10_headers.hpp"
 
 class ImGuiHandler {
+private:
+	enum class ReplacementMode {
+		NEW,
+		OPEN,
+		NONE
+	};
+
 public:
 	ImGuiHandler(HWND window, ID3D10Device *device, ID3D10RenderTargetView *renderTarget);
 	virtual ~ImGuiHandler();
@@ -22,6 +29,7 @@ protected:
 	virtual void draw();
 
 private:
+	ReplacementMode m_nextMode{ReplacementMode::NONE};
 	HWND m_window;
 	ID3D10Device *m_device;
 	ID3D10RenderTargetView *m_renderTarget;

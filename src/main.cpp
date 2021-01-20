@@ -36,7 +36,6 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		PostQuitMessage(-1);
 		return -1;
 	}
-	npp::file::get_filename();
 	weird_console_hack();
 //	json_test();
 	D3D10Window window;
@@ -46,8 +45,6 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	std::cout << "Test\n";
 	window.show(nCmdShow);
 	std::cout << "Test2\n";
-
-	npp::file::get_filename();
 
 	MSG msg{};
 	while (GetMessage(&msg, nullptr, 0, 0)) {

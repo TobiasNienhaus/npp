@@ -5,10 +5,11 @@
 #ifndef NPP_FILEHANDLING_HPP
 #define NPP_FILEHANDLING_HPP
 
-#include <string>
-#include <optional>
+//#include "../util/win_headers.hpp"
 
-#include "../util/win_headers.hpp"
+#include <optional>
+#include <string>
+#include <vector>
 
 namespace npp::tablet_types {
 
@@ -19,7 +20,16 @@ class Line;
 
 namespace npp::file {
 
-std::optional<std::wstring> get_filename();
+using data_t = std::vector<npp::tablet_types::Line>;
+
+enum class OpenMode {
+	OPEN,
+	SAVE
+};
+
+std::optional<std::string> get_filename(OpenMode mode);
+bool save_data(const std::string &filename, const data_t &data);
+data_t load_data(const std::string &filename);
 
 }
 

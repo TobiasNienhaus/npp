@@ -13,9 +13,13 @@
 #include "tablet_props.hpp"
 #include "tablet_util.hpp"
 
+#include "../files/filehandling.hpp"
+
 namespace npp {
 
 Tablet::Tablet(HWND hwnd) :
+	m_openCallbackId{897798644656454},
+	m_saveCallbackId{779898789798798},
 	m_valid{false},
 	m_down{false},
 	m_pointer{0},
@@ -24,7 +28,20 @@ Tablet::Tablet(HWND hwnd) :
 	m_windowHandle{hwnd},
 	m_pressure{s_pressureDefault},
 	m_tiltX{s_tiltXDefault},
-	m_tiltY{s_tiltYDefault} {}
+	m_tiltY{s_tiltYDefault} {
+	m_openCallbackId = Globals::register_open_callback([this] {
+		open_callback();
+	});
+	m_saveCallbackId = Globals::register_save_callback([this] {
+		save_callback();
+	});
+	Globals::debug();
+}
+
+Tablet::~Tablet() {
+	Globals::deregister_open_callback(m_openCallbackId);
+	Globals::deregister_save_callback(m_saveCallbackId);
+}
 
 void Tablet::read_properties() {
 	POINTER_INFO info;
@@ -57,7 +74,8 @@ void Tablet::read_properties() {
 					  << ", PRESS PHYS MAX: " << prop.physicalMax << '\n';
 			break;
 		case props::Usage::BARREL_PRESSURE:
-			std::cout << "BARREL MIN: " << prop.logicalMin << ", BARREL MAX: " << prop.logicalMax << '\n';
+			std::cout << "BARREL MIN: " << prop.logicalMin
+					  << ", BARREL MAX: " << prop.logicalMax << '\n';
 			m_pressure = {.initialized = true,
 						  .usagePageId = prop.usagePageId,
 						  .usageId = prop.usageId,
@@ -82,7 +100,7 @@ void Tablet::read_properties() {
 			break;
 		}
 	}
-//	set_properties_to_default();
+	//	set_properties_to_default();
 }
 
 void Tablet::clear_props() {
@@ -157,10 +175,11 @@ void Tablet::update() {
 				auto p{info[i].pointerInfo.ptPixelLocation};
 				if (ScreenToClient(info[i].pointerInfo.hwndTarget, &p)) {
 					point_data_t pd{true, static_cast<float>(p.x),
-								 static_cast<float>(p.y),
-								 m_pressure.normalize(info[i].pressure)};
+									static_cast<float>(p.y),
+									m_pressure.normalize(info[i].pressure)};
 					m_points.push(pd);
 					m_lines.back().push(pd);
+					Globals::has_unsaved_changes() = true;
 				} else {
 					std::cout
 						<< "Point could not be converted to client space\n";
@@ -177,6 +196,7 @@ void Tablet::pen_down(pointerid_t id) {
 		} else {
 			m_down = true;
 			m_lines.emplace_back();
+			Globals::has_unsaved_changes() = true;
 		}
 	}
 }
@@ -254,6 +274,26 @@ const std::vector<Tablet::line_t> &Tablet::get_all_lines() {
 	return m_lines;
 }
 
+void Tablet::save_callback() {
+	std::cout << "Save to " << Globals::filename().value_or("ERROR") << '\n';
+	npp::file::save_data(Globals::filename().value(), get_all_lines());
+}
+
+void Tablet::open_callback() {
+	if (Globals::file_to_load().has_value()) {
+		auto vec{npp::file::load_data(Globals::file_to_load().value())};
+		if (!vec.empty()) {
+			Globals::filename() = Globals::file_to_load().value();
+			Globals::file_to_load() = {};
+			m_lines = vec;
+		}
+	} else {
+		m_lines.clear();
+	}
+	Globals::clear_drawing_surface() = true;
+	Globals::redraw_drawing_surface() = true;
+}
+
 float Tablet::Property::normalize(INT32 val, bool shouldClamp) const {
 	auto ret =
 		static_cast<float>((static_cast<double>(val) - min) / (max - min));
@@ -289,5 +329,5 @@ Line::it_t Line::begin() {
 Line::it_t Line::end() {
 	return m_points.end();
 }
-}
+} // namespace tablet_types
 } // namespace npp

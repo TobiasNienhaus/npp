@@ -13,6 +13,8 @@
 
 #include <nlohmann/json_fwd.hpp>
 
+#include "../globals.hpp"
+
 namespace npp {
 
 namespace tablet_types {
@@ -63,6 +65,7 @@ public:
 
 public:
 	explicit Tablet(HWND hwnd = nullptr);
+	~Tablet();
 
 	using pointerid_t = unsigned short;
 
@@ -107,6 +110,9 @@ public:
 	const std::vector<line_t> &get_all_lines();
 
 private:
+	Globals::callback_id_t m_openCallbackId;
+	Globals::callback_id_t m_saveCallbackId;
+
 	bool m_valid;
 	bool m_down;
 	pointerid_t m_pointer;
@@ -138,6 +144,9 @@ private:
 	Property m_pressure;
 	Property m_tiltX;
 	Property m_tiltY;
+
+	void save_callback();
+	void open_callback();
 };
 
 } // namespace npp

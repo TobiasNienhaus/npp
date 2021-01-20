@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD 20)
 add_subdirectory(external/imgui)
 add_subdirectory(external/json)
 add_subdirectory(external/nativefiledialog)
+add_subdirectory(external/ImGuiFileDialog)
 
 add_executable(npp WIN32
 			   src/main.cpp
@@ -26,13 +27,14 @@ add_executable(npp WIN32
 			   src/globals.cpp
 			   src/files/json_handling.cpp
 			   src/files/filehandling.cpp
-			   )
+			   src/files/filedialog.cpp src/files/filedialog.hpp)
 
 target_include_directories(npp PRIVATE
 						   external/imgui
 						   external/json/include
 						   external/magic_enum
 						   external/nativefiledialog/include
+						   external/ImGuiFileDialog
 						   )
 
-target_link_libraries(npp PRIVATE imgui_win32 nlohmann_json nativefiledialog)
+target_link_libraries(npp PRIVATE imgui_win32 nlohmann_json nativefiledialog ImGuiFileDialog)
