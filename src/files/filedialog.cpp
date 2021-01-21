@@ -4,6 +4,11 @@
 
 #include "filedialog.hpp"
 
+#include "filehandling.hpp"
+
+#include <filesystem>
+#include <string>
+
 #include "../globals.hpp"
 
 static auto *det_dialog() {
@@ -16,11 +21,12 @@ npp::file::dialog::Status &npp::file::dialog::status() {
 }
 
 void npp::file::dialog::open(Status openMode) {
+	namespace fs = std::filesystem;
 	static std::string titleOpen{"Open File"};
 	static std::string titleSave{"Save As"};
 	constexpr const char *filters =
-		"Plain (*.npp){.npp},Binary (*.bnpp){.bnpp}";
-	static std::string path = "F:/Dokumente"; // TODO replace with WinAPI one
+		"Compressed (*.bnpp){.bnpp}, Plain (*.npp){.npp}, All (*.bnpp; *.npp){.bnpp,.npp}";
+//	static std::string path = "F:/Dokumente"; // TODO replace with WinAPI one
 
 	status() = openMode;
 
@@ -29,9 +35,16 @@ void npp::file::dialog::open(Status openMode) {
 		flags |= ImGuiFileDialogFlags_ConfirmOverwrite;
 	}
 
-	det_dialog()->OpenModal(
-		"DIALOG", openMode == Status::OPEN ? titleOpen : titleSave, filters,
-		Globals::filename().value_or(path), 1, nullptr, flags);
+	if(Globals::filename().has_value()) {
+		fs::path p{Globals::filename().value()};
+		det_dialog()->OpenModal(
+			"DIALOG", openMode == Status::OPEN ? titleOpen : titleSave, filters,
+			p.parent_path().string(), p.filename().string(), 1, nullptr, flags);
+	} else {
+		det_dialog()->OpenModal(
+			"DIALOG", openMode == Status::OPEN ? titleOpen : titleSave, filters,
+			get_default_path(), "notes.bnpp", 1, nullptr, flags);
+	}
 }
 
 void npp::file::dialog::display() {

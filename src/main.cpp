@@ -36,6 +36,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		PostQuitMessage(-1);
 		return -1;
 	}
+	npp::file::prepare_folders();
 	weird_console_hack();
 //	json_test();
 	D3D10Window window;

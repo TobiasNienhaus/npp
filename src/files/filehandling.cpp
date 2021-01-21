@@ -6,12 +6,9 @@
 
 #include <nlohmann/json.hpp>
 #include "../tab/Tablet.hpp"
-#include "json_handling.hpp"
 
 #include <Shlobj.h>
 #include <iostream>
-
-#include <nfd.h>
 
 #include <filesystem>
 #include <fstream>
@@ -33,6 +30,21 @@ static std::optional<std::string> load_file_as_string(const std::string &path) {
 	}
 }
 
+static const std::string &get_documents_path();
+
+static bool dir_exists(const std::string &path) {
+	DWORD ftyp = GetFileAttributesA(path.c_str());
+	if (ftyp == INVALID_FILE_ATTRIBUTES) {
+		return false; // something is wrong with your path!
+	}
+
+	if (ftyp & FILE_ATTRIBUTE_DIRECTORY) {
+		return true; // this is a directory!
+	}
+
+	return false; // this is not a directory!
+}
+
 namespace npp::file {
 
 static data_t load_from_binary(const std::string &path);
@@ -40,56 +52,6 @@ static data_t load_from_text(const std::string &path);
 
 static bool save_to_text(const std::string &path, const data_t &data);
 static bool save_to_binary(const std::string &path, const data_t &data);
-
-std::optional<std::string> get_filename(OpenMode mode) {
-	PWSTR documentsPath = nullptr;
-	HRESULT hr =
-		SHGetKnownFolderPath(FOLDERID_Documents, 0, nullptr, &documentsPath);
-	if (FAILED(hr)) {
-		CoTaskMemFree(documentsPath);
-		return {};
-	}
-
-	int cNum = WideCharToMultiByte(CP_UTF8, 0, documentsPath, -1, nullptr, 0,
-								   nullptr, nullptr);
-	auto *cStr = new char[cNum];
-	WideCharToMultiByte(CP_UTF8, 0, documentsPath, -1, cStr, cNum, nullptr,
-						nullptr);
-
-	std::cout << "Default path: " << cStr << '\n';
-
-	nfdchar_t *outPath{nullptr};
-
-	nfdresult_t result = NFD_ERROR;
-	switch (mode) {
-	case OpenMode::OPEN:
-		result = NFD_OpenDialog("npp;bnpp", cStr, &outPath);
-		break;
-	case OpenMode::SAVE:
-		result = NFD_SaveDialog("npp;bnpp", cStr, &outPath);
-		break;
-	}
-
-	delete[] cStr;
-	CoTaskMemFree(documentsPath);
-
-	if (result == NFD_OKAY) {
-		std::string ret{outPath};
-
-		//		int charNum = MultiByteToWideChar(CP_UTF8, 0, outPath, -1,
-		// nullptr, 0); 		auto *wstr = new wchar_t[charNum];
-		//		MultiByteToWideChar(CP_UTF8, 0, outPath, -1, wstr, charNum);
-		//		std::string str{outPath};
-		//		delete[] wstr;
-		delete[] outPath;
-		return ret;
-	} else if (result == NFD_CANCEL) {
-		return std::nullopt;
-	} else {
-		std::cout << "Error: " << NFD_GetError() << '\n';
-		return std::nullopt;
-	}
-}
 
 bool save_data(const std::string &filename, const data_t &data) {
 	using nlohmann::json;
@@ -117,6 +79,23 @@ data_t load_data(const std::string &filename) {
 	}
 }
 
+const std::string &get_default_path() {
+	static bool initialized{};
+	static std::string str{};
+	if (!initialized) {
+		str = get_documents_path() + "/npp/";
+	}
+	return str;
+}
+
+void prepare_folders() {
+	auto path{get_documents_path() + "/npp/"};
+	if(!dir_exists(path)) {
+		// Create folder
+		std::filesystem::create_directories(path);
+	}
+}
+
 static data_t load_from_binary(const std::string &path) {
 	using nlohmann::json;
 	std::ifstream f(path, std::ios::in | std::ios::binary);
@@ -133,22 +112,14 @@ static data_t load_from_binary(const std::string &path) {
 		std::string str;
 		str.reserve(fileSize);
 
-//		std::vector<char8_t> d;
-//		d.reserve(fileSize);
-
 		str.insert(str.begin(), std::istream_iterator<char>(f),
-				 std::istream_iterator<char>());
-
-//		std::vector<char8_t> out;
-//		out.reserve(fileSize);
+				   std::istream_iterator<char>());
 
 		std::string o;
 
-		snappy::Uncompress(str.data(), str.size(),
-						   &o);
+		snappy::Uncompress(str.data(), str.size(), &o);
 
 		auto j = json::from_bson(o);
-		//		auto j = json::parse(data.value());
 		data_t data;
 		j.at("data").get_to(data);
 		return data;
@@ -163,7 +134,6 @@ static data_t load_from_text(const std::string &path) {
 	if (data.has_value()) {
 		auto j = json::parse(data.value());
 		data_t d;
-		std::cout << "TEXT: \n" << j.at("data").dump(2) << '\n';
 		j.at("data").get_to(d);
 		return d;
 	} else {
@@ -201,7 +171,8 @@ static bool save_to_binary(const std::string &path, const data_t &data) {
 
 		snappy::Compress(out.data(), out.size(), &compressed);
 
-		file.write(compressed.data(), compressed.size() * sizeof(std::string::value_type));
+		file.write(compressed.data(),
+				   compressed.size() * sizeof(std::string::value_type));
 		file.close();
 		return true;
 	} else {
@@ -210,3 +181,26 @@ static bool save_to_binary(const std::string &path, const data_t &data) {
 }
 
 } // namespace npp::file
+
+static const std::string &get_documents_path() {
+	static bool initialized{};
+	static std::string str{};
+	if (!initialized) {
+		PWSTR documentsPath = nullptr;
+		HRESULT hr = SHGetKnownFolderPath(FOLDERID_Documents, 0, nullptr,
+										  &documentsPath);
+		if (FAILED(hr)) {
+			CoTaskMemFree(documentsPath);
+			str = "C:/";
+		} else {
+			int cNum = WideCharToMultiByte(CP_UTF8, 0, documentsPath, -1,
+										   nullptr, 0, nullptr, nullptr);
+			auto *cStr = new char[cNum];
+			WideCharToMultiByte(CP_UTF8, 0, documentsPath, -1, cStr, cNum,
+								nullptr, nullptr);
+			str.assign(cStr);
+			delete[] cStr;
+		}
+	}
+	return str;
+}

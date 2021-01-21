@@ -27,9 +27,11 @@ enum class OpenMode {
 	SAVE
 };
 
-std::optional<std::string> get_filename(OpenMode mode);
 bool save_data(const std::string &filename, const data_t &data);
 data_t load_data(const std::string &filename);
+
+const std::string &get_default_path();
+void prepare_folders();
 
 }
 
