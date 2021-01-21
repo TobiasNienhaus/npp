@@ -2,6 +2,7 @@
 // Created by Tobias on 1/19/2021.
 //
 
+#include "json_handling.hpp"
 #include "filehandling.hpp"
 
 #include <nlohmann/json.hpp>
