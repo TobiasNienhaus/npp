@@ -16,6 +16,8 @@
 #include <filesystem>
 #include <fstream>
 
+#include <snappy.h>
+
 static std::optional<std::string> load_file_as_string(const std::string &path) {
 	std::ifstream file{path};
 	if (file.is_open()) {
@@ -117,7 +119,7 @@ data_t load_data(const std::string &filename) {
 
 static data_t load_from_binary(const std::string &path) {
 	using nlohmann::json;
-	std::basic_ifstream<char8_t> f(path, std::ios::in | std::ios::binary);
+	std::ifstream f(path, std::ios::in | std::ios::binary);
 	if (f.is_open()) {
 		f.unsetf(std::ios::skipws);
 
@@ -128,13 +130,24 @@ static data_t load_from_binary(const std::string &path) {
 		fileSize = f.tellg();
 		f.seekg(0, std::ios::beg);
 
-		std::vector<char8_t> d;
-		d.reserve(fileSize);
+		std::string str;
+		str.reserve(fileSize);
 
-		d.insert(d.begin(), std::istreambuf_iterator<char8_t>(f),
-				 std::istreambuf_iterator<char8_t>());
+//		std::vector<char8_t> d;
+//		d.reserve(fileSize);
 
-		auto j = json::from_bson(d);
+		str.insert(str.begin(), std::istream_iterator<char>(f),
+				 std::istream_iterator<char>());
+
+//		std::vector<char8_t> out;
+//		out.reserve(fileSize);
+
+		std::string o;
+
+		snappy::Uncompress(str.data(), str.size(),
+						   &o);
+
+		auto j = json::from_bson(o);
 		//		auto j = json::parse(data.value());
 		data_t data;
 		j.at("data").get_to(data);
@@ -182,7 +195,13 @@ static bool save_to_binary(const std::string &path, const data_t &data) {
 		json js = json::object();
 		js["data"] = data;
 		auto d{json::to_bson(js)};
-		file.write((char *)d.data(), d.size() * sizeof(char8_t));
+		std::string out{d.begin(), d.end()};
+		std::string compressed;
+		compressed.reserve(out.size());
+
+		snappy::Compress(out.data(), out.size(), &compressed);
+
+		file.write(compressed.data(), compressed.size() * sizeof(std::string::value_type));
 		file.close();
 		return true;
 	} else {
