@@ -60,7 +60,7 @@ void ImGuiHandler::draw() {
 	bool openModal = false;
 
 	ImGui::BeginMainMenuBar();
-	if (ImGui::BeginMenu("Test")) {
+	if (ImGui::BeginMenu("File")) {
 		if(ImGui::MenuItem("New")) {
 			if(Globals::has_unsaved_changes()) {
 				m_nextMode = ReplacementMode::NEW;
@@ -70,6 +70,7 @@ void ImGuiHandler::draw() {
 				Globals::on_open_file();
 			}
 		}
+		ImGui::Separator();
 		if (ImGui::MenuItem("Open")) {
 			if(Globals::has_unsaved_changes()) {
 				std::cout << "Unsaved Changes!\n";
@@ -79,6 +80,7 @@ void ImGuiHandler::draw() {
 				npp::file::dialog::open(npp::file::dialog::Status::OPEN);
 			}
 		}
+		ImGui::Separator();
 		if(ImGui::MenuItem("Save")) {
 			if(Globals::filename().has_value()) {
 				Globals::on_save_file();
