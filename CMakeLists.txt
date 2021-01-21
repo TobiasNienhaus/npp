@@ -29,7 +29,9 @@ add_executable(npp WIN32
 			   src/files/json_handling.cpp
 			   src/files/filehandling.cpp
 			   src/files/filedialog.cpp
-			   src/util/string_utils.cpp src/util/string_utils.hpp)
+			   src/util/string_utils.cpp
+			   res/icon.rc
+			   )
 
 target_include_directories(npp PRIVATE
 						   external/imgui
