@@ -147,6 +147,27 @@ void ImGuiHandler::draw() {
 	}
 
 	npp::file::dialog::display();
+
+	if(Globals::wants_to_close() && !ImGui::IsPopupOpen("Close?")) {
+		ImGui::OpenPopup("Close?");
+	}
+
+	if(ImGui::BeginPopupModal("Close?", nullptr,
+						   ImGuiWindowFlags_AlwaysAutoResize)) {
+		ImGui::Text("You have unsaved changes.");
+		if(ImGui::Button("Yes")) {
+			DestroyWindow(m_window);
+			Globals::wants_to_close() = false;
+			ImGui::CloseCurrentPopup();
+		}
+		ImGui::SameLine();
+		ImGui::SetItemDefaultFocus();
+		if(ImGui::Button("No")) {
+			Globals::wants_to_close() = false;
+			ImGui::CloseCurrentPopup();
+		}
+		ImGui::EndPopup();
+	}
 }
 
 LRESULT ImGuiHandler::handle_message(UINT msg, WPARAM wp, LPARAM lp) {

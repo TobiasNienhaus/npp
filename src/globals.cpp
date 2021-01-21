@@ -17,12 +17,15 @@ bool &Globals::clear_drawing_surface() {
 bool &Globals::redraw_drawing_surface() {
 	return instance().m_redrawDrawingSurface;
 }
+
 std::optional<std::string> &Globals::filename() {
 	return instance().m_filename;
 }
+
 bool &Globals::has_unsaved_changes() {
 	return instance().m_unsavedChanges;
 }
+
 std::optional<std::string> &Globals::file_to_load() {
 	return instance().m_fileToLoad;
 }
@@ -70,10 +73,16 @@ void Globals::on_save_file() {
 	for(const auto &[_, cb] : instance().m_saveCallbacks) {
 		cb();
 	}
+	Globals::has_unsaved_changes() = false;
 }
 
 void Globals::on_open_file() {
 	for(const auto &[_, cb] : instance().m_openCallbacks) {
 		cb();
 	}
+	Globals::has_unsaved_changes() = false;
+}
+
+bool &Globals::wants_to_close() {
+	return instance().m_wantsToClose;
 }

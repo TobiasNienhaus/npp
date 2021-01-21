@@ -35,7 +35,6 @@ Tablet::Tablet(HWND hwnd) :
 	m_saveCallbackId = Globals::register_save_callback([this] {
 		save_callback();
 	});
-	Globals::debug();
 }
 
 Tablet::~Tablet() {

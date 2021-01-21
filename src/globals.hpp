@@ -41,6 +41,8 @@ private:
 	std::optional<std::string> m_fileToLoad{};
 	bool m_unsavedChanges{};
 
+	bool m_wantsToClose{};
+
 public:
 	static bool &clear_drawing_surface();
 	static bool &redraw_drawing_surface();
@@ -57,9 +59,7 @@ public:
 	static void on_save_file();
 	static void on_open_file();
 
-	inline static void debug() {
-		std::cout << "COUNT: " << instance().m_openCallbacks.size() << '\n';
-	}
+	static bool &wants_to_close();
 
 };
 

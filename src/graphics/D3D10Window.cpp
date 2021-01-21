@@ -136,7 +136,11 @@ LRESULT D3D10Window::handle_message(UINT msg, WPARAM wp, LPARAM lp) {
 		PostQuitMessage(0);
 		return 0;
 	case WM_CLOSE:
-		DestroyWindow(get_window());
+		if(Globals::has_unsaved_changes()) {
+			Globals::wants_to_close() = true;
+		} else {
+			DestroyWindow(get_window());
+		}
 		// Else: User canceled. Do nothing.
 		return 0;
 	case WM_SIZE: {
