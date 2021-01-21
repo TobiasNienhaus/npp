@@ -16,6 +16,8 @@
 
 #include "tab/tablet_props.hpp"
 
+#include "util/string_utils.hpp"
+
 void print_all_device_properties();
 
 void weird_console_hack() {
@@ -45,6 +47,18 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	if (!window.create(L"NPP", WS_OVERLAPPEDWINDOW)) { return 1; }
 
 	window.show(nCmdShow);
+
+	if (wcscmp(lpCmdLine, L"") != 0) {
+		auto path = npp::str_util::wstr_to_str(lpCmdLine);
+		if(path.starts_with('"')) {
+			path.erase(path.begin());
+		}
+		if(path.ends_with('"')) {
+			path.pop_back();
+		}
+		Globals::file_to_load() = path;
+		Globals::on_open_file();
+	}
 
 	MSG msg{};
 	while (GetMessage(&msg, nullptr, 0, 0)) {
