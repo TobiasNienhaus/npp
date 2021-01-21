@@ -7,6 +7,7 @@ add_subdirectory(external/imgui)
 add_subdirectory(external/json)
 add_subdirectory(external/nativefiledialog)
 add_subdirectory(external/ImGuiFileDialog)
+add_subdirectory(external/snappy)
 
 add_executable(npp WIN32
 			   src/main.cpp
@@ -27,7 +28,8 @@ add_executable(npp WIN32
 			   src/globals.cpp
 			   src/files/json_handling.cpp
 			   src/files/filehandling.cpp
-			   src/files/filedialog.cpp src/files/filedialog.hpp)
+			   src/files/filedialog.cpp
+			   )
 
 target_include_directories(npp PRIVATE
 						   external/imgui
@@ -35,6 +37,7 @@ target_include_directories(npp PRIVATE
 						   external/magic_enum
 						   external/nativefiledialog/include
 						   external/ImGuiFileDialog
+						   external/snappy
 						   )
 
-target_link_libraries(npp PRIVATE imgui_win32 nlohmann_json nativefiledialog ImGuiFileDialog)
+target_link_libraries(npp PRIVATE imgui_win32 nlohmann_json nativefiledialog ImGuiFileDialog snappy)
