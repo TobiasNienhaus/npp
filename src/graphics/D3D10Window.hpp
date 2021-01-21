@@ -33,11 +33,6 @@ private:
 	HRESULT create_render_target();
 	HRESULT create_d2d_render_target(bool debug = false);
 
-	void save_file_as();
-	void save_file();
-	void open_file();
-	bool handle_file_ops();
-
 protected:
 	BOOL on_valid_context_creation() override;
 	LRESULT handle_message(UINT msg, WPARAM wp, LPARAM lp) override;

@@ -37,15 +37,14 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		return -1;
 	}
 	npp::file::prepare_folders();
+#ifdef DEBUG
 	weird_console_hack();
-//	json_test();
+#endif
 	D3D10Window window;
 
 	if (!window.create(L"NPP", WS_OVERLAPPEDWINDOW)) { return 1; }
 
-	std::cout << "Test\n";
 	window.show(nCmdShow);
-	std::cout << "Test2\n";
 
 	MSG msg{};
 	while (GetMessage(&msg, nullptr, 0, 0)) {

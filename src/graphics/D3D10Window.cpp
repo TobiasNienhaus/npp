@@ -13,19 +13,23 @@
 #include "../files/filehandling.hpp"
 #include "../globals.hpp"
 
-void ErrorDescription(HRESULT hr) {
+#ifdef DEBUG
+void error_description(HRESULT hr) {
 	if (FACILITY_WINDOWS == HRESULT_FACILITY(hr)) hr = HRESULT_CODE(hr);
 	TCHAR *szErrMsg;
 
 	if (FormatMessage(
 			FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL,
 			hr, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR)&szErrMsg, 0,
-			NULL) != 0) {
+			nullptr) != 0) {
 		_tprintf(TEXT("%s"), szErrMsg);
 		LocalFree(szErrMsg);
 	} else
 		_tprintf(TEXT("[Could not find a description for error # %#x.]\n"), hr);
 }
+#else
+void ErrorDescription(HRESULT) {}
+#endif
 
 BOOL D3D10Window::on_valid_context_creation() {
 	// FIXME make returning boolean possible on fail
@@ -73,7 +77,6 @@ BOOL D3D10Window::on_valid_context_creation() {
 		if (SUCCEEDED(hr)) {
 			m_device = device;
 			device = nullptr;
-			std::cout << "At level " << counter << '\n';
 			break;
 		}
 		++counter;
@@ -102,13 +105,13 @@ BOOL D3D10Window::on_valid_context_creation() {
 
 	hr = create_render_target();
 	if (FAILED(hr)) {
-		ErrorDescription(hr);
+		error_description(hr);
 		return FALSE;
 	}
 
 	hr = create_d2d_render_target();
 	if (FAILED(hr)) {
-		ErrorDescription(hr);
+		error_description(hr);
 		return FALSE;
 	}
 
@@ -121,10 +124,6 @@ BOOL D3D10Window::on_valid_context_creation() {
 }
 
 LRESULT D3D10Window::handle_message(UINT msg, WPARAM wp, LPARAM lp) {
-	if(handle_file_ops()) {
-		return 0;
-	}
-
 	if (m_imgui && m_imgui->handle_message(msg, wp, lp)) { return true; }
 	if (m_drawer && m_drawer->handle_message(msg, wp, lp)) { return true; }
 
@@ -157,19 +156,19 @@ LRESULT D3D10Window::handle_message(UINT msg, WPARAM wp, LPARAM lp) {
 			auto hr = m_swapChain->ResizeBuffers(
 				0, (UINT)LOWORD(lp), (UINT)HIWORD(lp), DXGI_FORMAT_UNKNOWN, 0);
 			if (FAILED(hr)) {
-				ErrorDescription(hr);
+				error_description(hr);
 				return 0;
 			}
 
 			hr = create_render_target();
 			if (hr == ERROR_PATH_NOT_FOUND) { std::cerr << "WHat?\n"; }
 			if (FAILED(hr)) {
-				ErrorDescription(hr);
+				error_description(hr);
 				return 0;
 			}
 			hr = create_d2d_render_target();
 			if (FAILED(hr)) {
-				ErrorDescription(hr);
+				error_description(hr);
 				return 0;
 			}
 
@@ -205,13 +204,13 @@ HRESULT D3D10Window::create_render_target() {
 	CComPtr<ID3D10Texture2D> backBuffer;
 	auto hr = m_swapChain->GetBuffer(0, IID_PPV_ARGS(&backBuffer));
 	if (FAILED(hr)) {
-		ErrorDescription(hr);
+		error_description(hr);
 		return hr;
 	}
 	hr = m_device->CreateRenderTargetView(backBuffer, nullptr,
 										  &m_mainRenderTargetView);
 	if (FAILED(hr) || hr == ERROR_PATH_NOT_FOUND) {
-		ErrorDescription(hr);
+		error_description(hr);
 		return hr;
 	}
 	if (m_imgui) {
@@ -242,7 +241,7 @@ HRESULT D3D10Window::create_d2d_render_target(bool debug) {
 	//		.minLevel = D2D1_FEATURE_LEVEL_10};
 	auto hr = m_swapChain->GetBuffer(0, IID_PPV_ARGS(&surface));
 	if (FAILED(hr)) {
-		ErrorDescription(hr);
+		error_description(hr);
 		return hr;
 	}
 	if (!debug) {
@@ -251,42 +250,9 @@ HRESULT D3D10Window::create_d2d_render_target(bool debug) {
 	}
 	if (FAILED(hr)) {
 		std::cerr << "!\n";
-		ErrorDescription(hr);
+		error_description(hr);
 		hr = hr;
 	}
 	if (m_drawer) { m_drawer->set_render_target(m_d2dRenderTarget); }
 	return hr;
-}
-
-void D3D10Window::save_file_as() {
-	auto filename{npp::file::get_filename(npp::file::OpenMode::SAVE)};
-	if (filename.has_value()) {
-		Globals::filename() = filename.value();
-		Globals::on_save_file();
-		Globals::has_unsaved_changes() = false;
-	}
-}
-
-void D3D10Window::save_file() {
-	auto &file = Globals::filename();
-	if (!file.has_value()) {
-		file = npp::file::get_filename(npp::file::OpenMode::SAVE);
-	}
-	if (file.has_value()) {
-		Globals::on_save_file();
-		Globals::has_unsaved_changes() = false;
-	}
-}
-
-void D3D10Window::open_file() {
-	auto filename{npp::file::get_filename(npp::file::OpenMode::OPEN)};
-	if (filename.has_value()) {
-		Globals::file_to_load() = filename.value();
-		Globals::on_open_file();
-	}
-}
-
-bool D3D10Window::handle_file_ops() {
-
-	return false;
 }
